@@ -21,8 +21,13 @@ export async function lookupLinkedInProfile(linkedinUrl: string): Promise<Lookup
     return { ok: false, error: "PROXYCURL_API_KEY no configurada" };
   }
 
+  const normalizedUrl = normalizeLinkedInUrl(linkedinUrl);
+  if (!normalizedUrl) {
+    return { ok: false, error: "URL de LinkedIn inválida" };
+  }
+
   const url = new URL("https://nubela.co/proxycurl/api/v2/linkedin");
-  url.searchParams.set("linkedin_profile_url", linkedinUrl);
+  url.searchParams.set("linkedin_profile_url", normalizedUrl);
   url.searchParams.set("use_cache", "if-present");
 
   let response: Response;
@@ -40,6 +45,10 @@ export async function lookupLinkedInProfile(linkedinUrl: string): Promise<Lookup
 
   if (response.status === 403) {
     return { ok: false, error: "Perfil privado o no accesible" };
+  }
+
+  if (response.status === 410) {
+    return { ok: false, error: "Perfil eliminado o URL inválida" };
   }
 
   if (!response.ok) {
@@ -63,6 +72,20 @@ export async function lookupLinkedInProfile(linkedinUrl: string): Promise<Lookup
 export function companiesMatch(a: string, b: string | null): boolean {
   if (!b) return false;
   return normalizeCompany(a) === normalizeCompany(b);
+}
+
+function normalizeLinkedInUrl(raw: string): string | null {
+  try {
+    const u = new URL(raw.trim());
+    // Solo perfiles personales /in/
+    if (!u.pathname.startsWith("/in/")) return null;
+    // Normalizar a https://www.linkedin.com/in/username
+    const parts = u.pathname.split("/").filter(Boolean);
+    if (parts.length < 2) return null;
+    return `https://www.linkedin.com/in/${parts[1]}/`;
+  } catch {
+    return null;
+  }
 }
 
 function normalizeCompany(name: string): string {
