@@ -41,6 +41,7 @@ export type Database = {
           linkedin_url: string;
           empresa_original: string;
           empresa_actual: string | null;
+          cargo_actual: string | null;
           changed: boolean;
           error: string | null;
           created_at: string;
@@ -54,12 +55,14 @@ export type Database = {
           linkedin_url: string;
           empresa_original: string;
           empresa_actual?: string | null;
+          cargo_actual?: string | null;
           changed?: boolean;
           error?: string | null;
           created_at?: string;
         };
         Update: {
           empresa_actual?: string | null;
+          cargo_actual?: string | null;
           changed?: boolean;
           error?: string | null;
         };

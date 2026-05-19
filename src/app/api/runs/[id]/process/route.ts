@@ -82,6 +82,7 @@ async function processContacts(
         .from("contacts")
         .update({
           empresa_actual: result.currentCompany,
+          cargo_actual: result.currentTitle,
           changed,
           error: null,
         })

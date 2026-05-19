@@ -9,6 +9,7 @@ type ContactRow = {
   linkedin_url: string;
   empresa_original: string;
   empresa_actual: string | null;
+  cargo_actual: string | null;
   changed: boolean;
   error: string | null;
 };
@@ -36,7 +37,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: contacts } = await (supabase as any)
     .from("contacts")
-    .select("contact_id, nombre, apellidos, linkedin_url, empresa_original, empresa_actual, changed, error")
+    .select("contact_id, nombre, apellidos, linkedin_url, empresa_original, empresa_actual, cargo_actual, changed, error")
     .eq("run_id", id)
     .order("contact_id") as { data: ContactRow[] | null };
 
@@ -49,6 +50,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     "LinkedIn": c.linkedin_url,
     "Empresa original": c.empresa_original,
     "Empresa nueva": c.changed ? (c.empresa_actual ?? "") : "",
+    "Cargo actual": c.cargo_actual ?? "",
     "Error": c.error ?? "",
   }));
 
