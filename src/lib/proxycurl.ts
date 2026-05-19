@@ -30,6 +30,8 @@ export async function lookupLinkedInProfile(linkedinUrl: string): Promise<Lookup
   url.searchParams.set("linkedin_profile_url", normalizedUrl);
   url.searchParams.set("use_cache", "if-present");
 
+  console.log("[ProxyCurl] Consultando:", normalizedUrl);
+
   let response: Response;
   try {
     response = await fetch(url.toString(), {
@@ -38,6 +40,8 @@ export async function lookupLinkedInProfile(linkedinUrl: string): Promise<Lookup
   } catch {
     return { ok: false, error: "Error de red al contactar ProxyCurl" };
   }
+
+  console.log("[ProxyCurl] Status:", response.status, "para", normalizedUrl);
 
   if (response.status === 404) {
     return { ok: false, error: "Perfil no encontrado" };
@@ -77,12 +81,11 @@ export function companiesMatch(a: string, b: string | null): boolean {
 function normalizeLinkedInUrl(raw: string): string | null {
   try {
     const u = new URL(raw.trim());
-    // Solo perfiles personales /in/
     if (!u.pathname.startsWith("/in/")) return null;
-    // Normalizar a https://www.linkedin.com/in/username
     const parts = u.pathname.split("/").filter(Boolean);
     if (parts.length < 2) return null;
-    return `https://www.linkedin.com/in/${parts[1]}/`;
+    // Sin trailing slash, que es lo que espera ProxyCurl
+    return `https://www.linkedin.com/in/${parts[1]}`;
   } catch {
     return null;
   }
