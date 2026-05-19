@@ -5,7 +5,7 @@
 | Variable | Descripción | Obligatoria |
 |---|---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | URL del proyecto Supabase | Sí |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Clave anon pública de Supabase | Sí |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Publishable key de Supabase (nuevo formato) | Sí |
 | `PROXYCURL_API_KEY` | API key de ProxyCurl (issue #3) | Sí (para procesamiento) |
 
 ## Setup inicial (manual)
