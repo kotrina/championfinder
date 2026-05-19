@@ -2,6 +2,8 @@
 
 Última actualización: 2026-05-19
 
+
+
 ## ¿Qué es championfinder?
 
 championfinder te permite subir un listado de contactos de LinkedIn y detectar automáticamente cuáles han cambiado de empresa desde que los registraste.
@@ -52,3 +54,38 @@ El fichero debe ser `.xlsx` (Excel) o `.csv` con las siguientes columnas:
 | "Faltan columnas obligatorias" | El fichero no tiene alguna de las columnas requeridas | Revisa que los nombres de columna son exactos |
 | "Solo se aceptan .xlsx o .csv" | Formato de fichero incorrecto | Exporta el fichero en el formato correcto |
 | "El fichero está vacío" | No hay filas de datos | Asegúrate de que el fichero tiene datos |
+
+---
+
+## Ver resultados y descargar
+
+Una vez completado el procesamiento, la página de la ejecución muestra una tabla con todos los contactos.
+
+### Columnas de la tabla
+
+| Columna | Descripción |
+|---|---|
+| ID | Identificador del contacto |
+| Nombre | Nombre y apellidos |
+| LinkedIn | Enlace al perfil |
+| Empresa original | Empresa registrada en tu fichero |
+| Estado | Resultado del procesamiento |
+
+### Estados posibles
+
+| Estado | Significado |
+|---|---|
+| ✓ Sin cambios | La persona sigue en la misma empresa |
+| → [Empresa nueva] | La persona ha cambiado de empresa |
+| ⚠ [Mensaje de error] | No se pudo consultar el perfil |
+
+### Filtros
+
+Puedes filtrar la tabla por:
+- **Todos** — muestra todos los contactos
+- **Cambios** — solo los que han cambiado de empresa
+- **Errores** — solo los que no se pudieron consultar
+
+### Descargar resultados
+
+Haz clic en **Descargar CSV** o **Descargar Excel** para obtener el fichero con todos los resultados. El fichero incluye todas las columnas originales más la columna de resultado.
