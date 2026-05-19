@@ -26,22 +26,22 @@ export async function lookupLinkedInProfile(linkedinUrl: string): Promise<Lookup
     return { ok: false, error: "URL de LinkedIn inválida" };
   }
 
-  const url = new URL("https://nubela.co/proxycurl/api/v2/linkedin");
-  url.searchParams.set("linkedin_profile_url", normalizedUrl);
-  url.searchParams.set("use_cache", "if-present");
+  // Construir la URL manualmente para evitar doble-codificación de caracteres especiales
+  const requestUrl = `https://nubela.co/proxycurl/api/v2/linkedin?linkedin_profile_url=${encodeURIComponent(normalizedUrl)}&use_cache=if-present`;
 
   console.log("[ProxyCurl] Consultando:", normalizedUrl);
 
   let response: Response;
   try {
-    response = await fetch(url.toString(), {
+    response = await fetch(requestUrl, {
       headers: { Authorization: `Bearer ${apiKey}` },
     });
   } catch {
     return { ok: false, error: "Error de red al contactar ProxyCurl" };
   }
 
-  console.log("[ProxyCurl] Status:", response.status, "para", normalizedUrl);
+  const responseText = await response.text();
+  console.log("[ProxyCurl] Status:", response.status, "Body:", responseText.slice(0, 200));
 
   if (response.status === 404) {
     return { ok: false, error: "Perfil no encontrado" };
@@ -61,7 +61,7 @@ export async function lookupLinkedInProfile(linkedinUrl: string): Promise<Lookup
 
   let profile: ProxyCurlProfile;
   try {
-    profile = await response.json();
+    profile = JSON.parse(responseText);
   } catch {
     return { ok: false, error: "Respuesta inválida de ProxyCurl" };
   }
