@@ -6,7 +6,7 @@
 |---|---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | URL del proyecto Supabase | Sí |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Publishable key de Supabase (nuevo formato) | Sí |
-| `PROXYCURL_API_KEY` | API key de ProxyCurl (issue #3) | Sí (para procesamiento) |
+| `ENRICHLAYER_API_KEY` | API key de EnrichLayer para lookups de LinkedIn | Sí (para procesamiento) |
 
 ## Setup inicial (manual)
 

@@ -1,4 +1,4 @@
-type ProxyCurlExperience = {
+type EnrichLayerExperience = {
   company: string | null;
   company_linkedin_profile_url: string | null;
   title: string | null;
@@ -6,8 +6,8 @@ type ProxyCurlExperience = {
   ends_at: { year: number; month: number; day: number } | null;
 };
 
-type ProxyCurlProfile = {
-  experiences?: ProxyCurlExperience[];
+type EnrichLayerProfile = {
+  experiences?: EnrichLayerExperience[];
   full_name?: string;
 };
 
@@ -16,9 +16,9 @@ export type LookupResult =
   | { ok: false; error: string };
 
 export async function lookupLinkedInProfile(linkedinUrl: string): Promise<LookupResult> {
-  const apiKey = process.env.PROXYCURL_API_KEY;
+  const apiKey = process.env.ENRICHLAYER_API_KEY;
   if (!apiKey) {
-    return { ok: false, error: "PROXYCURL_API_KEY no configurada" };
+    return { ok: false, error: "ENRICHLAYER_API_KEY no configurada" };
   }
 
   const normalizedUrl = normalizeLinkedInUrl(linkedinUrl);
@@ -26,10 +26,9 @@ export async function lookupLinkedInProfile(linkedinUrl: string): Promise<Lookup
     return { ok: false, error: "URL de LinkedIn inválida" };
   }
 
-  // Construir la URL manualmente para evitar doble-codificación de caracteres especiales
-  const requestUrl = `https://nubela.co/proxycurl/api/v2/linkedin?linkedin_profile_url=${encodeURIComponent(normalizedUrl)}&use_cache=if-present`;
+  const requestUrl = `https://enrichlayer.com/api/v2/profile?profile_url=${encodeURIComponent(normalizedUrl)}`;
 
-  console.log("[ProxyCurl] Consultando:", normalizedUrl);
+  console.log("[EnrichLayer] Consultando:", normalizedUrl);
 
   let response: Response;
   try {
@@ -37,33 +36,33 @@ export async function lookupLinkedInProfile(linkedinUrl: string): Promise<Lookup
       headers: { Authorization: `Bearer ${apiKey}` },
     });
   } catch {
-    return { ok: false, error: "Error de red al contactar ProxyCurl" };
+    return { ok: false, error: "Error de red al contactar EnrichLayer" };
   }
 
   const responseText = await response.text();
-  console.log("[ProxyCurl] Status:", response.status, "Body:", responseText.slice(0, 200));
+  console.log("[EnrichLayer] Status:", response.status, "Body:", responseText.slice(0, 200));
 
   if (response.status === 404) {
     return { ok: false, error: "Perfil no encontrado" };
   }
 
-  if (response.status === 403) {
-    return { ok: false, error: "Perfil privado o no accesible" };
+  if (response.status === 401 || response.status === 403) {
+    return { ok: false, error: "API key inválida o sin permisos" };
   }
 
-  if (response.status === 410) {
-    return { ok: false, error: "Perfil eliminado o URL inválida" };
+  if (response.status === 429) {
+    return { ok: false, error: "Límite de llamadas alcanzado" };
   }
 
   if (!response.ok) {
-    return { ok: false, error: `Error ProxyCurl: ${response.status}` };
+    return { ok: false, error: `Error EnrichLayer: ${response.status}` };
   }
 
-  let profile: ProxyCurlProfile;
+  let profile: EnrichLayerProfile;
   try {
     profile = JSON.parse(responseText);
   } catch {
-    return { ok: false, error: "Respuesta inválida de ProxyCurl" };
+    return { ok: false, error: "Respuesta inválida de EnrichLayer" };
   }
 
   // La posición actual es la primera experiencia sin fecha de fin
@@ -84,7 +83,6 @@ function normalizeLinkedInUrl(raw: string): string | null {
     if (!u.pathname.startsWith("/in/")) return null;
     const parts = u.pathname.split("/").filter(Boolean);
     if (parts.length < 2) return null;
-    // Sin trailing slash, que es lo que espera ProxyCurl
     return `https://www.linkedin.com/in/${parts[1]}`;
   } catch {
     return null;
