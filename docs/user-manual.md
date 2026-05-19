@@ -89,3 +89,18 @@ Puedes filtrar la tabla por:
 ### Descargar resultados
 
 Haz clic en **Descargar CSV** o **Descargar Excel** para obtener el fichero con todos los resultados. El fichero incluye todas las columnas originales más la columna de resultado.
+
+---
+
+## Historial de ejecuciones
+
+El panel principal muestra todas tus ejecuciones anteriores en una tabla con:
+
+- **Fichero** — nombre del fichero subido (enlace a los resultados)
+- **Fecha** — fecha y hora de creación
+- **Contactos** — número de contactos procesados
+- **Cambios** — número de contactos que han cambiado de empresa
+- **Estado** — Pendiente / Procesando / Completado / Error
+- **Descarga** — acceso directo a CSV o Excel para ejecuciones completadas
+
+La tabla muestra 20 ejecuciones por página con navegación entre páginas.
