@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import type { RunStatus } from "@/types/database";
 
 type StatusData = {
@@ -29,14 +30,18 @@ export function RunProcessor({
   });
   const [launching, setLaunching] = useState(false);
   const [launchError, setLaunchError] = useState<string | null>(null);
+  const router = useRouter();
 
   const fetchStatus = useCallback(async () => {
     const res = await fetch(`/api/runs/${runId}/status`);
     if (res.ok) {
       const data = await res.json();
       setStatusData(data);
+      if (data.status === "done" || data.status === "error") {
+        router.refresh();
+      }
     }
-  }, [runId]);
+  }, [runId, router]);
 
   // Polling mientras esté procesando
   useEffect(() => {
