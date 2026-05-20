@@ -28,6 +28,37 @@ Página de creación de nueva ejecución. Flujo:
 
 ---
 
+## `ResultsTable`
+
+**Ruta:** `src/app/runs/[id]/ResultsTable.tsx`
+
+Tabla de resultados con filtros y botones de descarga. Se muestra en `/runs/[id]` cuando el run tiene `status === "done"`.
+
+**Props:**
+- `runId: string` — ID del run para construir las URLs de exportación
+- `contacts: Contact[]` — array de contactos con sus resultados
+
+**Filtros:** Todos / Solo cambios / Solo errores
+
+**Columnas:** ID, Nombre, LinkedIn, Empresa original, Estado (sin cambio / empresa nueva / error)
+
+**Descargas:** CSV y Excel (.xlsx) vía `/api/runs/[id]/export?format=csv|xlsx`
+
+---
+
+## `RunProcessor`
+
+**Ruta:** `src/app/runs/[id]/RunProcessor.tsx`
+
+Gestiona el ciclo de vida de un run desde el cliente:
+- Estado `pending`: muestra botón para lanzar el procesamiento
+- Estado `processing`: barra de progreso con polling cada 2s
+- Estado `done`: mensaje de completado y resumen (cambios / errores)
+
+**Props:** `runId`, `initialStatus`, `totalContacts`
+
+---
+
 ## Utilidad `parseContactFile`
 
 **Ruta:** `src/lib/parse-contacts.ts`
