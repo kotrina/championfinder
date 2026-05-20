@@ -27,7 +27,14 @@ export async function parseContactFile(file: File): Promise<ParseResult> {
   let workbook: XLSX.WorkBook;
 
   try {
-    workbook = XLSX.read(buffer, { type: "array" });
+    const isCSV = file.name.toLowerCase().endsWith(".csv") || file.type === "text/csv";
+    if (isCSV) {
+      // Decodificar como UTF-8 explícitamente; sin esto SheetJS asume Latin-1 y corrompe acentos
+      const text = new TextDecoder("utf-8").decode(buffer);
+      workbook = XLSX.read(text, { type: "string" });
+    } else {
+      workbook = XLSX.read(buffer, { type: "array" });
+    }
   } catch {
     return { ok: false, error: "No se pudo leer el fichero. Asegúrate de que es un Excel (.xlsx) o CSV válido." };
   }
