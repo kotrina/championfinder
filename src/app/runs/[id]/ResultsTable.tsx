@@ -75,7 +75,6 @@ export function ResultsTable({ runId, contacts }: { runId: string; contacts: Con
 
       if (!res.ok) throw new Error();
 
-      // Sync local baseline so isDirty resets
       c.empresa_actual = edit.empresa_actual || null;
       c.cargo_actual = edit.cargo_actual || null;
       setEdits((prev) => {
@@ -120,92 +119,107 @@ export function ResultsTable({ runId, contacts }: { runId: string; contacts: Con
             download
             className="px-3 py-1.5 text-sm bg-white border border-gray-200 rounded-lg text-gray-600 hover:border-gray-300 transition-colors"
           >
-            Descargar CSV
+            CSV
           </a>
           <a
             href={`/api/runs/${runId}/export?format=xlsx`}
             download
             className="px-3 py-1.5 text-sm bg-white border border-gray-200 rounded-lg text-gray-600 hover:border-gray-300 transition-colors"
           >
-            Descargar Excel
+            Excel
           </a>
         </div>
       </div>
 
       {/* Tabla */}
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="border-b border-gray-100 bg-gray-50">
+        <table className="w-full text-sm table-fixed">
+          <colgroup>
+            <col className="w-[22%]" />
+            <col className="w-[18%]" />
+            <col className="w-[20%]" />
+            <col className="w-[20%]" />
+            <col className="w-[20%]" />
+          </colgroup>
+          <thead className="border-b border-gray-100 bg-gray-50">
+            <tr>
+              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Contacto</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Empresa original</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Empresa nueva</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Cargo actual</th>
+              <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Estado</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-50">
+            {filtered.length === 0 ? (
               <tr>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">ID</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Nombre</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">LinkedIn</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Empresa original</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Empresa nueva</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Cargo actual</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Estado</th>
-                <th className="px-4 py-3"></th>
+                <td colSpan={5} className="text-center py-8 text-sm text-gray-400">
+                  No hay resultados para este filtro.
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="text-center py-8 text-sm text-gray-400">
-                    No hay resultados para este filtro.
-                  </td>
-                </tr>
-              ) : (
-                filtered.map((c) => {
-                  const edit = getEdit(c);
-                  const dirty = isDirty(c);
-                  const saveState = saveStates[c.id] ?? "idle";
+            ) : (
+              filtered.map((c) => {
+                const edit = getEdit(c);
+                const dirty = isDirty(c);
+                const saveState = saveStates[c.id] ?? "idle";
 
-                  return (
-                    <tr key={c.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3 text-gray-500 font-mono text-xs">{c.contact_id}</td>
-                      <td className="px-4 py-3 text-gray-900 font-medium whitespace-nowrap">{c.nombre} {c.apellidos}</td>
-                      <td className="px-4 py-3">
+                return (
+                  <tr key={c.id} className="hover:bg-gray-50 transition-colors align-top">
+                    {/* Contacto: nombre + ID + LinkedIn */}
+                    <td className="px-4 py-3">
+                      <div className="font-medium text-gray-900 truncate">{c.nombre} {c.apellidos}</div>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-xs text-gray-400 font-mono truncate">{c.contact_id}</span>
                         <a
                           href={c.linkedin_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline text-xs truncate block max-w-[160px]"
+                          title={c.linkedin_url}
+                          className="text-blue-500 hover:text-blue-700 flex-shrink-0"
                         >
-                          {c.linkedin_url}
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5">
+                            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                          </svg>
                         </a>
-                      </td>
-                      <td className="px-4 py-3 text-gray-600">{c.empresa_original}</td>
+                      </div>
+                    </td>
 
-                      {/* Empresa nueva — editable */}
-                      <td className="px-4 py-2">
-                        <input
-                          type="text"
-                          value={edit.empresa_actual}
-                          onChange={(e) => handleChange(c.id, "empresa_actual", e.target.value)}
-                          placeholder="—"
-                          className="w-full min-w-[140px] px-2 py-1 text-sm border border-transparent rounded hover:border-gray-200 focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-300 bg-transparent focus:bg-white transition-colors"
-                        />
-                      </td>
+                    {/* Empresa original */}
+                    <td className="px-4 py-3 text-gray-600 text-sm truncate" title={c.empresa_original}>
+                      {c.empresa_original}
+                    </td>
 
-                      {/* Cargo actual — editable */}
-                      <td className="px-4 py-2">
-                        <input
-                          type="text"
-                          value={edit.cargo_actual}
-                          onChange={(e) => handleChange(c.id, "cargo_actual", e.target.value)}
-                          placeholder="—"
-                          className="w-full min-w-[140px] px-2 py-1 text-sm border border-transparent rounded hover:border-gray-200 focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-300 bg-transparent focus:bg-white transition-colors"
-                        />
-                      </td>
+                    {/* Empresa nueva — editable */}
+                    <td className="px-3 py-2">
+                      <input
+                        type="text"
+                        value={edit.empresa_actual}
+                        onChange={(e) => handleChange(c.id, "empresa_actual", e.target.value)}
+                        placeholder="—"
+                        className="w-full px-2 py-1.5 text-sm border border-transparent rounded-md hover:border-gray-200 focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-300 bg-transparent focus:bg-white transition-colors"
+                      />
+                    </td>
 
-                      <td className="px-4 py-3">
+                    {/* Cargo actual — editable */}
+                    <td className="px-3 py-2">
+                      <input
+                        type="text"
+                        value={edit.cargo_actual}
+                        onChange={(e) => handleChange(c.id, "cargo_actual", e.target.value)}
+                        placeholder="—"
+                        className="w-full px-2 py-1.5 text-sm border border-transparent rounded-md hover:border-gray-200 focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-300 bg-transparent focus:bg-white transition-colors"
+                      />
+                    </td>
+
+                    {/* Estado + acción guardar */}
+                    <td className="px-4 py-3">
+                      <div className="flex flex-col gap-2 items-start">
                         {c.error ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-50 text-red-700 text-xs rounded-full border border-red-100">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-50 text-red-700 text-xs rounded-full border border-red-100 max-w-full truncate" title={c.error}>
                             ⚠ {c.error}
                           </span>
                         ) : c.changed ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 text-amber-700 text-xs rounded-full border border-amber-100 font-medium">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 text-amber-700 text-xs rounded-full border border-amber-100">
                             Cambio detectado
                           </span>
                         ) : (
@@ -213,35 +227,28 @@ export function ResultsTable({ runId, contacts }: { runId: string; contacts: Con
                             ✓ Sin cambios
                           </span>
                         )}
-                      </td>
 
-                      {/* Botón guardar */}
-                      <td className="px-4 py-2 text-right whitespace-nowrap">
                         {saveState === "saved" ? (
                           <span className="text-xs text-green-600 font-medium">✓ Guardado</span>
                         ) : saveState === "error" ? (
-                          <span className="text-xs text-red-500 font-medium">Error</span>
-                        ) : (
+                          <span className="text-xs text-red-500 font-medium">Error al guardar</span>
+                        ) : dirty ? (
                           <button
                             onClick={() => handleSave(c)}
-                            disabled={!dirty || saveState === "saving"}
-                            className={`px-3 py-1 text-xs rounded-lg border transition-colors ${
-                              dirty
-                                ? "bg-blue-600 text-white border-blue-600 hover:bg-blue-700"
-                                : "bg-white text-gray-300 border-gray-200 cursor-default"
-                            }`}
+                            disabled={saveState === "saving"}
+                            className="px-2.5 py-1 text-xs rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-60"
                           >
                             {saveState === "saving" ? "Guardando…" : "Guardar"}
                           </button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+                        ) : null}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );
