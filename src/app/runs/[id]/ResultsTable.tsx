@@ -18,6 +18,8 @@ type Contact = {
 type Filter = "all" | "changed" | "errors";
 type EditableField = "empresa_actual" | "cargo_actual";
 type EditingCell = { contactId: string; field: EditableField; value: string };
+type SyncState = "idle" | "syncing" | "done" | "error";
+type SyncSummary = { successCount: number; errorCount: number; failedIds: Set<string> };
 
 // ── Subcomponent defined outside to avoid remount on parent re-render ────────
 
@@ -108,6 +110,9 @@ export function ResultsTable({ runId, contacts }: { runId: string; contacts: Con
   const [cellSaveError, setCellSaveError] = useState(false);
   // Toggle changed state
   const [togglingChanged, setTogglingChanged] = useState<Set<string>>(new Set());
+  // Pipedrive sync
+  const [syncState, setSyncState] = useState<SyncState>("idle");
+  const [syncSummary, setSyncSummary] = useState<SyncSummary | null>(null);
 
   // ── Derived helpers ────────────────────────────────────────────────────────
 
@@ -132,6 +137,7 @@ export function ResultsTable({ runId, contacts }: { runId: string; contacts: Con
   // ── Row styling ────────────────────────────────────────────────────────────
 
   function rowBorderClass(c: Contact, sel: boolean): string {
+    if (syncSummary?.failedIds.has(c.id)) return "border-red-400";
     if (c.error) return "border-red-300";
     if (isChanged(c)) return "border-amber-300";
     if (sel) return "border-blue-300";
@@ -242,6 +248,43 @@ export function ResultsTable({ runId, contacts }: { runId: string; contacts: Con
     }
   }
 
+  // ── Pipedrive sync ────────────────────────────────────────────────────────
+
+  async function sendToPipedrive() {
+    if (syncState === "syncing" || selected.size === 0) return;
+    setSyncState("syncing");
+    setSyncSummary(null);
+    try {
+      const res = await fetch("/api/pipedrive/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contactIds: Array.from(selected) }),
+      });
+      const data = await res.json() as {
+        ok: boolean;
+        successCount: number;
+        errorCount: number;
+        results: { supabaseId: string; ok: boolean }[];
+      };
+      if (!res.ok) throw new Error();
+      const failedIds = new Set(
+        data.results.filter((r) => !r.ok).map((r) => r.supabaseId)
+      );
+      setSyncSummary({ successCount: data.successCount, errorCount: data.errorCount, failedIds });
+      setSyncState("done");
+      // Deselect successfully synced contacts
+      if (data.successCount > 0) {
+        setSelected((prev) => {
+          const n = new Set(prev);
+          data.results.filter((r) => r.ok).forEach((r) => n.delete(r.supabaseId));
+          return n;
+        });
+      }
+    } catch {
+      setSyncState("error");
+    }
+  }
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
@@ -286,6 +329,29 @@ export function ResultsTable({ runId, contacts }: { runId: string; contacts: Con
       </div>
 
       {/* Barra selección Pipedrive */}
+      {/* Resultado del último sync */}
+      {syncSummary && syncState === "done" && (
+        <div className={`px-4 py-2.5 rounded-lg border text-sm ${
+          syncSummary.errorCount === 0
+            ? "bg-green-50 border-green-200 text-green-700"
+            : syncSummary.successCount === 0
+            ? "bg-red-50 border-red-200 text-red-700"
+            : "bg-amber-50 border-amber-200 text-amber-700"
+        }`}>
+          {syncSummary.successCount > 0 && (
+            <span>✓ {syncSummary.successCount} contacto{syncSummary.successCount !== 1 ? "s" : ""} actualizados en Pipedrive. </span>
+          )}
+          {syncSummary.errorCount > 0 && (
+            <span>⚠ {syncSummary.errorCount} con error (quedan seleccionados).</span>
+          )}
+        </div>
+      )}
+      {syncState === "error" && (
+        <div className="px-4 py-2.5 rounded-lg border bg-red-50 border-red-200 text-red-700 text-sm">
+          Error al conectar con Pipedrive. Verifica que PIPEDRIVE_API_TOKEN esté configurado.
+        </div>
+      )}
+
       {selected.size > 0 ? (
         <div className="flex items-center justify-between px-4 py-2.5 bg-blue-50 border border-blue-200 rounded-lg text-sm">
           <span className="text-blue-700 font-medium">
@@ -294,16 +360,17 @@ export function ResultsTable({ runId, contacts }: { runId: string; contacts: Con
           <div className="flex gap-2">
             <button
               onClick={clearSelection}
-              className="px-3 py-1 text-xs rounded-md border border-blue-300 text-blue-600 hover:bg-blue-100 transition-colors"
+              disabled={syncState === "syncing"}
+              className="px-3 py-1 text-xs rounded-md border border-blue-300 text-blue-600 hover:bg-blue-100 disabled:opacity-50 transition-colors"
             >
               Limpiar selección
             </button>
             <button
-              disabled
-              title="Próximamente"
-              className="px-3 py-1 text-xs rounded-md bg-blue-600 text-white opacity-50 cursor-not-allowed"
+              onClick={sendToPipedrive}
+              disabled={syncState === "syncing"}
+              className="px-3 py-1 text-xs rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60 transition-colors"
             >
-              Enviar a Pipedrive
+              {syncState === "syncing" ? "Enviando…" : "Enviar a Pipedrive"}
             </button>
           </div>
         </div>
