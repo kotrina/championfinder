@@ -10,6 +10,7 @@ type Contact = {
   linkedin_url: string;
   empresa_original: string;
   empresa_actual: string | null;
+  cargo_actual: string | null;
   changed: boolean;
   error: string | null;
 };
@@ -80,13 +81,14 @@ export function ResultsTable({ runId, contacts }: { runId: string; contacts: Con
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Nombre</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">LinkedIn</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Empresa original</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Cargo actual</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">Estado</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-8 text-sm text-gray-400">
+                  <td colSpan={6} className="text-center py-8 text-sm text-gray-400">
                     No hay resultados para este filtro.
                   </td>
                 </tr>
@@ -106,6 +108,7 @@ export function ResultsTable({ runId, contacts }: { runId: string; contacts: Con
                       </a>
                     </td>
                     <td className="px-4 py-3 text-gray-600">{c.empresa_original}</td>
+                    <td className="px-4 py-3 text-gray-600 text-xs">{c.cargo_actual ?? "—"}</td>
                     <td className="px-4 py-3">
                       {c.error ? (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-50 text-red-700 text-xs rounded-full border border-red-100">
