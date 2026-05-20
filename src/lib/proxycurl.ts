@@ -1,0 +1,75 @@
+type ProxyCurlExperience = {
+  company: string | null;
+  company_linkedin_profile_url: string | null;
+  title: string | null;
+  starts_at: { year: number; month: number; day: number } | null;
+  ends_at: { year: number; month: number; day: number } | null;
+};
+
+type ProxyCurlProfile = {
+  experiences?: ProxyCurlExperience[];
+  full_name?: string;
+};
+
+export type LookupResult =
+  | { ok: true; currentCompany: string | null }
+  | { ok: false; error: string };
+
+export async function lookupLinkedInProfile(linkedinUrl: string): Promise<LookupResult> {
+  const apiKey = process.env.PROXYCURL_API_KEY;
+  if (!apiKey) {
+    return { ok: false, error: "PROXYCURL_API_KEY no configurada" };
+  }
+
+  const url = new URL("https://nubela.co/proxycurl/api/v2/linkedin");
+  url.searchParams.set("linkedin_profile_url", linkedinUrl);
+  url.searchParams.set("use_cache", "if-present");
+
+  let response: Response;
+  try {
+    response = await fetch(url.toString(), {
+      headers: { Authorization: `Bearer ${apiKey}` },
+    });
+  } catch {
+    return { ok: false, error: "Error de red al contactar ProxyCurl" };
+  }
+
+  if (response.status === 404) {
+    return { ok: false, error: "Perfil no encontrado" };
+  }
+
+  if (response.status === 403) {
+    return { ok: false, error: "Perfil privado o no accesible" };
+  }
+
+  if (!response.ok) {
+    return { ok: false, error: `Error ProxyCurl: ${response.status}` };
+  }
+
+  let profile: ProxyCurlProfile;
+  try {
+    profile = await response.json();
+  } catch {
+    return { ok: false, error: "Respuesta inválida de ProxyCurl" };
+  }
+
+  // La posición actual es la primera experiencia sin fecha de fin
+  const currentExperience = profile.experiences?.find((exp) => exp.ends_at === null) ?? profile.experiences?.[0];
+  const currentCompany = currentExperience?.company ?? null;
+
+  return { ok: true, currentCompany };
+}
+
+export function companiesMatch(a: string, b: string | null): boolean {
+  if (!b) return false;
+  return normalizeCompany(a) === normalizeCompany(b);
+}
+
+function normalizeCompany(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[.,\-_&]/g, " ")
+    .replace(/\b(s\.?a\.?|s\.?l\.?|ltd|inc|corp|gmbh|b\.?v\.?)\b/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
