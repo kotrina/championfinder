@@ -1,5 +1,6 @@
-// Campo de Pipedrive para el cargo. Cambiar si es un campo personalizado (ej: "abc123_field").
-const JOB_TITLE_FIELD = process.env.PIPEDRIVE_JOB_TITLE_FIELD ?? "job_title";
+// Campo personalizado "Rol" en Pipedrive (clave descubierta via GET /v1/personFields).
+// Configurable via PIPEDRIVE_JOB_TITLE_FIELD por si cambia entre entornos.
+const JOB_TITLE_FIELD = process.env.PIPEDRIVE_JOB_TITLE_FIELD ?? "b711dbcdfccfab3c6796761d032f71936621a027";
 
 export type PipedriveResult =
   | { ok: true }
