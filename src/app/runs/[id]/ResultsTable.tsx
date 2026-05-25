@@ -62,12 +62,15 @@ export function ResultsTable({ runId, contacts }: { runId: string; contacts: Con
     return e.empresa_actual !== (c.empresa_actual ?? "") || e.cargo_actual !== (c.cargo_actual ?? "");
   }
 
-  function handleChange(contactId: string, field: keyof RowEdit, value: string) {
-    setEdits((prev) => ({
-      ...prev,
-      [contactId]: { ...prev[contactId] ?? { empresa_actual: "", cargo_actual: "" }, [field]: value },
-    }));
-    setSaveStates((prev) => ({ ...prev, [contactId]: "idle" }));
+  function handleChange(c: Contact, field: keyof RowEdit, value: string) {
+    setEdits((prev) => {
+      const base: RowEdit = prev[c.id] ?? {
+        empresa_actual: c.empresa_actual ?? "",
+        cargo_actual: c.cargo_actual ?? "",
+      };
+      return { ...prev, [c.id]: { ...base, [field]: value } };
+    });
+    setSaveStates((prev) => ({ ...prev, [c.id]: "idle" }));
   }
 
   async function handleSave(c: Contact) {
@@ -299,7 +302,7 @@ export function ResultsTable({ runId, contacts }: { runId: string; contacts: Con
                       <input
                         type="text"
                         value={edit.empresa_actual}
-                        onChange={(e) => handleChange(c.id, "empresa_actual", e.target.value)}
+                        onChange={(e) => handleChange(c, "empresa_actual", e.target.value)}
                         placeholder="—"
                         className="w-full px-2 py-1.5 text-sm border border-transparent rounded-md hover:border-gray-200 focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-300 bg-transparent focus:bg-white transition-colors"
                       />
@@ -310,7 +313,7 @@ export function ResultsTable({ runId, contacts }: { runId: string; contacts: Con
                       <input
                         type="text"
                         value={edit.cargo_actual}
-                        onChange={(e) => handleChange(c.id, "cargo_actual", e.target.value)}
+                        onChange={(e) => handleChange(c, "cargo_actual", e.target.value)}
                         placeholder="—"
                         className="w-full px-2 py-1.5 text-sm border border-transparent rounded-md hover:border-gray-200 focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-300 bg-transparent focus:bg-white transition-colors"
                       />
