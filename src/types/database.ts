@@ -1,4 +1,5 @@
 export type RunStatus = "pending" | "processing" | "done" | "error";
+export type UserRole = "admin" | "user";
 
 export type Database = {
   public: {
@@ -65,6 +66,21 @@ export type Database = {
           cargo_actual?: string | null;
           changed?: boolean;
           error?: string | null;
+        };
+      };
+      profiles: {
+        Row: {
+          id: string;
+          role: UserRole;
+          created_at: string;
+        };
+        Insert: {
+          id: string;
+          role?: UserRole;
+          created_at?: string;
+        };
+        Update: {
+          role?: UserRole;
         };
       };
     };

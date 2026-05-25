@@ -28,19 +28,46 @@ export async function updateSession(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  const isAuthRoute = request.nextUrl.pathname.startsWith("/auth");
-  const isPublic = request.nextUrl.pathname === "/";
+  const { pathname } = request.nextUrl;
+  const isAuthRoute = pathname.startsWith("/auth");
+  const isPublic = pathname === "/";
+  const isRegister = pathname === "/auth/register";
+  const isAdminRoute = pathname.startsWith("/admin");
 
+  // Registro público deshabilitado: siempre redirigir a login
+  if (isRegister) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth/login";
+    return NextResponse.redirect(url);
+  }
+
+  // Sin sesión: redirigir a login (salvo rutas públicas y auth)
   if (!user && !isAuthRoute && !isPublic) {
     const url = request.nextUrl.clone();
     url.pathname = "/auth/login";
     return NextResponse.redirect(url);
   }
 
-  if (user && isAuthRoute && !request.nextUrl.pathname.startsWith("/auth/callback")) {
+  // Con sesión en ruta de auth: redirigir al dashboard
+  if (user && isAuthRoute && !pathname.startsWith("/auth/callback")) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);
+  }
+
+  // Rutas /admin: verificar rol admin
+  if (user && isAdminRoute) {
+    const { data: profile } = await supabase
+      .from("profiles" as never)
+      .select("role")
+      .eq("id", user.id)
+      .single() as { data: { role: string } | null };
+
+    if (profile?.role !== "admin") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/dashboard";
+      return NextResponse.redirect(url);
+    }
   }
 
   return supabaseResponse;

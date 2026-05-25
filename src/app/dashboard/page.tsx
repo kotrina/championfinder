@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createServerClient } from "@/lib/supabase/server";
+import { getUserRole } from "@/lib/get-user-role";
 import { LogoutButton } from "@/components/LogoutButton";
 import type { Database } from "@/types/database";
 
@@ -23,6 +24,8 @@ export default async function DashboardPage({
 
   if (!user) redirect("/auth/login");
 
+  const userRole = await getUserRole();
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: runs, count } = await (supabase as any)
     .from("runs")
@@ -36,7 +39,17 @@ export default async function DashboardPage({
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-lg font-semibold text-gray-900">championfinder</h1>
+          <div className="flex items-center gap-6">
+            <h1 className="text-lg font-semibold text-gray-900">championfinder</h1>
+            {userRole === "admin" && (
+              <nav className="flex gap-4 text-sm">
+                <span className="text-blue-600 font-medium">Dashboard</span>
+                <Link href="/admin/users" className="text-gray-500 hover:text-gray-900 transition-colors">
+                  Usuarios
+                </Link>
+              </nav>
+            )}
+          </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-500">{user.email}</span>
             <LogoutButton />
