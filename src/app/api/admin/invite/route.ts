@@ -28,10 +28,14 @@ export async function POST(req: Request) {
 
   const adminClient = createAdminClient();
 
-  // Invitar al usuario — Supabase envía el email con enlace de activación
+  // Invitar al usuario — redirectTo fuerza el enlace a producción en vez de localhost
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://championfinder.vercel.app";
   const { data: invited, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
     email,
-    { data: { role } }
+    {
+      data: { role },
+      redirectTo: `${appUrl}/auth/callback`,
+    }
   );
 
   if (inviteError) {
