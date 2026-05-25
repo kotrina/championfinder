@@ -10,10 +10,10 @@ Repositorio principal del proyecto championfinder.
 
 ## Documentación
 
-- [`eval/docs/architecture.md`](eval/docs/architecture.md)
-- [`eval/docs/database.md`](eval/docs/database.md)
-- [`eval/docs/auth.md`](eval/docs/auth.md)
-- [`eval/docs/components.md`](eval/docs/components.md)
-- [`eval/docs/deployment.md`](eval/docs/deployment.md)
-- [`eval/docs/data-patterns.md`](eval/docs/data-patterns.md)
+- [`docs/architecture.md`](docs/architecture.md)
+- [`docs/database.md`](docs/database.md)
+- [`docs/auth.md`](docs/auth.md)
+- [`docs/components.md`](docs/components.md)
+- [`docs/deployment.md`](docs/deployment.md)
+- [`docs/data-patterns.md`](docs/data-patterns.md)
 - [`docs/user-manual.md`](docs/user-manual.md)

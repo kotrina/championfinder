@@ -1,0 +1,106 @@
+# Manual de usuario — championfinder
+
+Última actualización: 2026-05-19
+
+
+
+## ¿Qué es championfinder?
+
+championfinder te permite subir un listado de contactos de LinkedIn y detectar automáticamente cuáles han cambiado de empresa desde que los registraste.
+
+---
+
+## Cómo empezar
+
+### 1. Crear una cuenta
+
+1. Accede a la aplicación y haz clic en **Regístrate**.
+2. Introduce tu email y una contraseña (mínimo 6 caracteres).
+3. Revisa tu bandeja de entrada y confirma el email.
+4. Ya puedes iniciar sesión.
+
+---
+
+## Crear una nueva ejecución
+
+### Formato del fichero
+
+El fichero debe ser `.xlsx` (Excel) o `.csv` con las siguientes columnas:
+
+| Columna | Descripción |
+|---|---|
+| `id_contacto` | Identificador único del contacto |
+| `nombre` | Nombre |
+| `apellidos` | Apellidos |
+| `linkedin_url` | URL completa del perfil de LinkedIn |
+| `empresa_actual` | Empresa en la que trabaja actualmente (según tus registros) |
+
+> **Nota:** El fichero puede tener columnas adicionales, pero las cinco anteriores son obligatorias. Los nombres de columna deben coincidir exactamente (sin mayúsculas).
+
+> **Límite:** Se procesarán un máximo de 100 contactos por ejecución.
+
+### Pasos
+
+1. Desde el panel principal, haz clic en **Nueva ejecución**.
+2. Arrastra tu fichero a la zona indicada, o haz clic para seleccionarlo.
+3. Revisa la previsualización de los primeros contactos.
+4. Si todo es correcto, haz clic en **Confirmar y lanzar procesamiento**.
+5. Serás redirigido a la página de resultados de la ejecución.
+
+### Errores comunes
+
+| Error | Causa | Solución |
+|---|---|---|
+| "Faltan columnas obligatorias" | El fichero no tiene alguna de las columnas requeridas | Revisa que los nombres de columna son exactos |
+| "Solo se aceptan .xlsx o .csv" | Formato de fichero incorrecto | Exporta el fichero en el formato correcto |
+| "El fichero está vacío" | No hay filas de datos | Asegúrate de que el fichero tiene datos |
+
+---
+
+## Ver resultados y descargar
+
+Una vez completado el procesamiento, la página de la ejecución muestra una tabla con todos los contactos.
+
+### Columnas de la tabla
+
+| Columna | Descripción |
+|---|---|
+| ID | Identificador del contacto |
+| Nombre | Nombre y apellidos |
+| LinkedIn | Enlace al perfil |
+| Empresa original | Empresa registrada en tu fichero |
+| Estado | Resultado del procesamiento |
+
+### Estados posibles
+
+| Estado | Significado |
+|---|---|
+| ✓ Sin cambios | La persona sigue en la misma empresa |
+| → [Empresa nueva] | La persona ha cambiado de empresa |
+| ⚠ [Mensaje de error] | No se pudo consultar el perfil |
+
+### Filtros
+
+Puedes filtrar la tabla por:
+- **Todos** — muestra todos los contactos
+- **Cambios** — solo los que han cambiado de empresa
+- **Errores** — solo los que no se pudieron consultar
+
+### Descargar resultados
+
+Haz clic en **Descargar CSV** o **Descargar Excel** para obtener el fichero con todos los resultados. El fichero incluye todas las columnas originales más la columna de resultado.
+
+---
+
+## Historial de ejecuciones
+
+El panel principal muestra todas tus ejecuciones anteriores en una tabla con:
+
+- **Fichero** — nombre del fichero subido (enlace a los resultados)
+- **Fecha** — fecha y hora de creación
+- **Contactos** — número de contactos procesados
+- **Cambios** — número de contactos que han cambiado de empresa
+- **Estado** — Pendiente / Procesando / Completado / Error
+- **Descarga** — acceso directo a CSV o Excel para ejecuciones completadas
+
+La tabla muestra 20 ejecuciones por página con navegación entre páginas.
