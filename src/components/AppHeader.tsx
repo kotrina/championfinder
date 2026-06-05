@@ -9,7 +9,6 @@ type Props = {
 
 export function AppHeader({ email, isAdmin, activePage }: Props) {
   const navLinks = [
-    { key: "dashboard", href: "/dashboard", label: "Dashboard" },
     { key: "contacts", href: "/contacts", label: "Contactos" },
     { key: "settings", href: "/settings", label: "Configuración" },
     ...(isAdmin ? [{ key: "users", href: "/admin/users", label: "Usuarios" }] : []),
