@@ -44,7 +44,16 @@ export function ContactsFilters({ roles, statuses }: Props) {
         className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-48"
       />
 
-      {/* ROL */}
+      {/* ROL — búsqueda por texto (fragmento) */}
+      <input
+        type="text"
+        placeholder="Buscar rol…"
+        defaultValue={searchParams.get("rol_q") ?? ""}
+        onChange={(e) => update("rol_q", e.target.value)}
+        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-40"
+      />
+
+      {/* ROL — select exacto */}
       <select
         value={searchParams.get("rol") ?? ""}
         onChange={(e) => update("rol", e.target.value)}
