@@ -83,6 +83,67 @@ export type Database = {
           role?: UserRole;
         };
       };
+      people: {
+        Row: {
+          pipedrive_id: number;
+          nombre: string | null;
+          apellidos: string | null;
+          email: string | null;
+          organizacion: string | null;
+          marketing_status: string | null;
+          rol: string | null;
+          linkedin_url: string | null;
+          won_deals: number;
+          total_activities: number;
+          location: string | null;
+          synced_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          pipedrive_id: number;
+          nombre?: string | null;
+          apellidos?: string | null;
+          email?: string | null;
+          organizacion?: string | null;
+          marketing_status?: string | null;
+          rol?: string | null;
+          linkedin_url?: string | null;
+          won_deals?: number;
+          total_activities?: number;
+          location?: string | null;
+          synced_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          nombre?: string | null;
+          apellidos?: string | null;
+          email?: string | null;
+          organizacion?: string | null;
+          marketing_status?: string | null;
+          rol?: string | null;
+          linkedin_url?: string | null;
+          won_deals?: number;
+          total_activities?: number;
+          location?: string | null;
+          synced_at?: string | null;
+        };
+      };
+      settings: {
+        Row: {
+          key: string;
+          value: string;
+          updated_at: string;
+        };
+        Insert: {
+          key: string;
+          value: string;
+          updated_at?: string;
+        };
+        Update: {
+          value?: string;
+          updated_at?: string;
+        };
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
