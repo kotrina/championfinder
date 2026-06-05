@@ -4,12 +4,13 @@ import { LogoutButton } from "./LogoutButton";
 type Props = {
   email: string;
   isAdmin?: boolean;
-  activePage?: "dashboard" | "contacts" | "settings" | "users";
+  activePage?: "dashboard" | "contacts" | "roles" | "settings" | "users";
 };
 
 export function AppHeader({ email, isAdmin, activePage }: Props) {
   const navLinks = [
     { key: "contacts", href: "/contacts", label: "Contactos" },
+    { key: "roles", href: "/roles", label: "Roles" },
     { key: "settings", href: "/settings", label: "Configuración" },
     ...(isAdmin ? [{ key: "users", href: "/admin/users", label: "Usuarios" }] : []),
   ] as const;
