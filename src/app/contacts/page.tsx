@@ -12,6 +12,7 @@ type SearchParams = {
   q?: string;
   org?: string;
   rol?: string;
+  rol_q?: string;
   status?: string;
   location?: string;
   page?: string;
@@ -60,7 +61,8 @@ export default async function ContactsPage({
     );
   }
   if (params.org) query = query.ilike("organizacion", `%${params.org}%`);
-  if (params.rol) query = query.ilike("rol", `%${params.rol}%`);
+  if (params.rol) query = query.eq("rol", params.rol);
+  if (params.rol_q) query = query.ilike("rol", `%${params.rol_q}%`);
   if (params.status) query = query.eq("marketing_status", params.status);
   if (params.location) query = query.ilike("location", `%${params.location}%`);
 
@@ -90,6 +92,7 @@ export default async function ContactsPage({
     if (params.q) sp.set("q", params.q);
     if (params.org) sp.set("org", params.org);
     if (params.rol) sp.set("rol", params.rol);
+    if (params.rol_q) sp.set("rol_q", params.rol_q);
     if (params.status) sp.set("status", params.status);
     if (params.location) sp.set("location", params.location);
     sp.set("page", String(p));
