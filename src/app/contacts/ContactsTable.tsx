@@ -19,9 +19,10 @@ export type Person = {
   cargo_linkedin: string | null;
 };
 
-type EditableField = "empresa_linkedin" | "cargo_linkedin";
+type EditableField = "empresa_linkedin" | "cargo_linkedin" | "linkedin_url";
 type EditingCell = { id: number; field: EditableField; value: string };
 type HiddenCols = { pipedrive_id: boolean; location: boolean; won_deals: boolean; total_activities: boolean };
+type LocalFields = { empresa?: string; cargo?: string; linkedin?: string };
 
 // ── Editable cell ─────────────────────────────────────────────────────────────
 function LinkedInCell({
@@ -78,7 +79,7 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
   const [showColMenu, setShowColMenu] = useState(false);
   const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
   const [savingCell, setSavingCell] = useState(false);
-  const [localLinkedIn, setLocalLinkedIn] = useState<Record<number, { empresa?: string; cargo?: string }>>({});
+  const [localLinkedIn, setLocalLinkedIn] = useState<Record<number, LocalFields>>({});
   const [detailPerson, setDetailPerson] = useState<Person | null>(null);
   const [showEnrichConfirm, setShowEnrichConfirm] = useState(false);
   const [enriching, setEnriching] = useState(false);
@@ -89,7 +90,8 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
   function getLinkedIn(p: Person, field: EditableField): string {
     const local = localLinkedIn[p.pipedrive_id];
     if (field === "empresa_linkedin") return local?.empresa !== undefined ? local.empresa : (p.empresa_linkedin ?? "");
-    return local?.cargo !== undefined ? local.cargo : (p.cargo_linkedin ?? "");
+    if (field === "cargo_linkedin") return local?.cargo !== undefined ? local.cargo : (p.cargo_linkedin ?? "");
+    return local?.linkedin !== undefined ? local.linkedin : (p.linkedin_url ?? "");
   }
 
   const allSelected = people.length > 0 && people.every((p) => selected.has(p.pipedrive_id));
@@ -132,7 +134,9 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
         ...prev,
         [id]: {
           ...prev[id],
-          ...(field === "empresa_linkedin" ? { empresa: value } : { cargo: value }),
+          ...(field === "empresa_linkedin" ? { empresa: value }
+            : field === "cargo_linkedin" ? { cargo: value }
+            : { linkedin: value }),
         },
       }));
       setEditingCell(null);
@@ -174,7 +178,7 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
       setLocalLinkedIn((prev) => {
         const next = { ...prev };
         for (const [id, vals] of Object.entries(updates)) {
-          next[Number(id)] = { ...next[Number(id)], ...vals };
+          next[Number(id)] = { ...next[Number(id)], empresa: vals.empresa, cargo: vals.cargo };
         }
         return next;
       });
@@ -287,7 +291,7 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
                 {!hiddenCols.location && <th className="text-left px-3 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap">Ubicación</th>}
                 {!hiddenCols.won_deals && <th className="text-right px-3 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap">Deals</th>}
                 {!hiddenCols.total_activities && <th className="text-right px-3 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap">Activ.</th>}
-                <th className="text-center px-3 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide w-8">Li</th>
+                <th className="text-left px-3 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap">LinkedIn URL</th>
                 {/* Columnas LinkedIn — color índigo */}
                 <th className="text-left px-3 py-2.5 text-xs font-medium text-indigo-500 uppercase tracking-wide whitespace-nowrap bg-indigo-50/50">Empresa LinkedIn</th>
                 <th className="text-left px-3 py-2.5 text-xs font-medium text-indigo-500 uppercase tracking-wide whitespace-nowrap bg-indigo-50/50">Cargo LinkedIn</th>
@@ -318,8 +322,8 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
                       <td className="px-3 py-2 text-gray-400 font-mono text-xs cursor-pointer"
                         onClick={() => setDetailPerson(p)}>{p.pipedrive_id}</td>
                     )}
-                    <td className="px-3 py-2 cursor-pointer" onClick={() => setDetailPerson(p)}>
-                      <span className="font-medium text-gray-900 text-sm whitespace-nowrap">
+                    <td className="px-3 py-2 cursor-pointer max-w-[110px]" onClick={() => setDetailPerson(p)}>
+                      <span className="font-medium text-gray-900 text-sm truncate block">
                         {[p.nombre, p.apellidos].filter(Boolean).join(" ") || "—"}
                       </span>
                     </td>
@@ -346,16 +350,56 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
                       <td className="px-3 py-2 text-right text-gray-600 text-xs cursor-pointer"
                         onClick={() => setDetailPerson(p)}>{p.total_activities}</td>
                     )}
-                    <td className="px-3 py-2 text-center">
-                      {p.linkedin_url
-                        ? <a href={p.linkedin_url} target="_blank" rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="text-blue-400 hover:text-blue-600">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5 mx-auto">
-                              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                            </svg>
-                          </a>
-                        : <span className="text-gray-200 text-xs">—</span>}
+                    {/* LinkedIn URL — editable */}
+                    <td className="px-2 py-1.5 max-w-[160px]" onClick={(e) => e.stopPropagation()}>
+                      {editingCell?.id === p.pipedrive_id && editingCell.field === "linkedin_url" ? (
+                        <div className="flex flex-col gap-1">
+                          <input
+                            autoFocus
+                            value={editingCell.value}
+                            onChange={(e) => setEditingCell((prev) => prev ? { ...prev, value: e.target.value } : prev)}
+                            onKeyDown={(e) => { if (e.key === "Enter") saveCell(); if (e.key === "Escape") setEditingCell(null); }}
+                            className="w-full px-2 py-1 text-xs border border-blue-400 rounded focus:outline-none focus:ring-1 focus:ring-blue-300 bg-white"
+                            placeholder="https://linkedin.com/in/..."
+                          />
+                          <div className="flex gap-1">
+                            <button onClick={saveCell} disabled={savingCell}
+                              className="px-2 py-0.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-60">
+                              {savingCell ? "…" : "✓"}
+                            </button>
+                            <button onClick={() => setEditingCell(null)}
+                              className="px-2 py-0.5 text-xs border border-gray-200 text-gray-500 rounded hover:bg-gray-50">
+                              ✕
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div
+                          onClick={() => startEdit(p.pipedrive_id, "linkedin_url", getLinkedIn(p, "linkedin_url"))}
+                          className="group flex items-center gap-1 cursor-pointer rounded px-1 py-1 hover:bg-blue-50 transition-colors min-h-[28px]"
+                        >
+                          {getLinkedIn(p, "linkedin_url") ? (
+                            <>
+                              <a href={getLinkedIn(p, "linkedin_url")} target="_blank" rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="text-blue-500 hover:text-blue-700 flex-shrink-0">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-3 h-3">
+                                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                                </svg>
+                              </a>
+                              <span className="text-xs text-gray-400 truncate group-hover:text-blue-500 transition-colors">
+                                {getLinkedIn(p, "linkedin_url").replace("https://www.linkedin.com/in/", "").replace("https://linkedin.com/in/", "").replace(/\/$/, "")}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-xs text-gray-300 group-hover:text-gray-400">—</span>
+                          )}
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                            className="w-3 h-3 text-gray-200 group-hover:text-gray-400 flex-shrink-0 ml-auto transition-colors">
+                            <path d="M2.695 14.763l-1.262 3.154a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z" />
+                          </svg>
+                        </div>
+                      )}
                     </td>
                     {/* Empresa LinkedIn — editable */}
                     <td className="px-2 py-1.5 bg-indigo-50/30" onClick={(e) => e.stopPropagation()}>

@@ -14,11 +14,13 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const body = await req.json() as {
     empresa_linkedin?: string;
     cargo_linkedin?: string;
+    linkedin_url?: string;
   };
 
   const update: Record<string, string> = {};
   if (typeof body.empresa_linkedin === "string") update.empresa_linkedin = body.empresa_linkedin;
   if (typeof body.cargo_linkedin === "string") update.cargo_linkedin = body.cargo_linkedin;
+  if (typeof body.linkedin_url === "string") update.linkedin_url = body.linkedin_url;
 
   if (Object.keys(update).length === 0) {
     return NextResponse.json({ error: "Sin campos para actualizar" }, { status: 400 });
