@@ -609,6 +609,19 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
             )}
 
             <div className="border-t border-gray-100 pt-3 space-y-2">
+              {/* Opción: el contacto sigue en la misma empresa, solo cambió el ROL */}
+              <button
+                onClick={() => executeSyncAction(orgModal.personId, { action: "update_only" })}
+                className="w-full flex items-center gap-2 px-4 py-2.5 border border-green-300 text-green-700 text-sm rounded-lg hover:bg-green-50 transition-colors"
+              >
+                <span>✓</span>
+                <span className="text-left">
+                  <span className="font-medium">Actualizar solo ROL</span>
+                  <span className="block text-xs text-green-600">El contacto sigue en la misma empresa, solo ha cambiado de cargo</span>
+                </span>
+              </button>
+
+              {/* Opción: crear nueva empresa en Pipedrive */}
               <button
                 onClick={() => executeSyncAction(orgModal.personId, { action: "new_person_new_org" })}
                 className="w-full flex items-center gap-2 px-4 py-2.5 border-2 border-dashed border-orange-300 text-orange-600 text-sm rounded-lg hover:bg-orange-50 transition-colors"
@@ -616,6 +629,7 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
                 <span className="text-lg leading-none">＋</span>
                 <span>Crear nueva empresa: <strong>{orgModal.empresa}</strong> (label REVISAR)</span>
               </button>
+
               <button
                 onClick={() => { setOrgModal(null); setRowSyncState((prev) => ({ ...prev, [orgModal.personId]: "idle" })); }}
                 className="w-full py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
