@@ -23,6 +23,12 @@ type EditableField = "empresa_linkedin" | "cargo_linkedin" | "linkedin_url";
 type EditingCell = { id: number; field: EditableField; value: string };
 type HiddenCols = { pipedrive_id: boolean; location: boolean; won_deals: boolean; total_activities: boolean };
 type LocalFields = { empresa?: string; cargo?: string; linkedin?: string };
+type RowSyncState = "idle" | "searching" | "syncing" | "success" | "error";
+type OrgModal = {
+  personId: number;
+  empresa: string;
+  results: { id: number; name: string; people_count: number }[];
+};
 
 // ── Editable cell ─────────────────────────────────────────────────────────────
 function LinkedInCell({
@@ -84,6 +90,10 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
   const [showEnrichConfirm, setShowEnrichConfirm] = useState(false);
   const [enriching, setEnriching] = useState(false);
   const [enrichDone, setEnrichDone] = useState<{ success: number; errors: number } | null>(null);
+  // Per-row Pipedrive sync
+  const [rowSyncState, setRowSyncState] = useState<Record<number, RowSyncState>>({});
+  const [rowSyncError, setRowSyncError] = useState<Record<number, string>>({});
+  const [orgModal, setOrgModal] = useState<OrgModal | null>(null);
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -191,6 +201,64 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
     }
   }
 
+  // ── Pipedrive sync por fila ───────────────────────────────────────────────
+
+  function canSync(p: Person): boolean {
+    const empresa = getLinkedIn(p, "empresa_linkedin");
+    const cargo = getLinkedIn(p, "cargo_linkedin");
+    const linkedin = getLinkedIn(p, "linkedin_url");
+    return !!(empresa || cargo || linkedin);
+  }
+
+  async function handleSyncClick(p: Person) {
+    const empresa = getLinkedIn(p, "empresa_linkedin");
+    const org = p.organizacion ?? "";
+
+    // Determinar si empresa cambió
+    const empresaChanged = empresa && empresa.toLowerCase().trim() !== org.toLowerCase().trim();
+
+    if (!empresaChanged) {
+      // Ruta A directa
+      await executeSyncAction(p.pipedrive_id, { action: "update_only" });
+      return;
+    }
+
+    // Ruta B: buscar empresa en Pipedrive
+    setRowSyncState((prev) => ({ ...prev, [p.pipedrive_id]: "searching" }));
+    try {
+      const res = await fetch(`/api/pipedrive/organizations?term=${encodeURIComponent(empresa)}`);
+      const data = await res.json() as { organizations: { id: number; name: string; people_count: number }[] };
+      setOrgModal({ personId: p.pipedrive_id, empresa, results: data.organizations });
+      setRowSyncState((prev) => ({ ...prev, [p.pipedrive_id]: "idle" }));
+    } catch {
+      setRowSyncState((prev) => ({ ...prev, [p.pipedrive_id]: "error" }));
+      setRowSyncError((prev) => ({ ...prev, [p.pipedrive_id]: "Error buscando empresa" }));
+    }
+  }
+
+  async function executeSyncAction(
+    personId: number,
+    body: { action: "update_only" } | { action: "new_person_existing_org"; orgId: number } | { action: "new_person_new_org" }
+  ) {
+    setOrgModal(null);
+    setRowSyncState((prev) => ({ ...prev, [personId]: "syncing" }));
+    setRowSyncError((prev) => { const n = { ...prev }; delete n[personId]; return n; });
+    try {
+      const res = await fetch(`/api/people/${personId}/sync-to-pipe`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json() as { ok?: boolean; error?: string };
+      if (!res.ok || !data.ok) throw new Error(data.error ?? "Error desconocido");
+      setRowSyncState((prev) => ({ ...prev, [personId]: "success" }));
+      setTimeout(() => setRowSyncState((prev) => ({ ...prev, [personId]: "idle" })), 3000);
+    } catch (err) {
+      setRowSyncState((prev) => ({ ...prev, [personId]: "error" }));
+      setRowSyncError((prev) => ({ ...prev, [personId]: err instanceof Error ? err.message : "Error" }));
+    }
+  }
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
@@ -295,6 +363,7 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
                 {/* Columnas LinkedIn — color índigo */}
                 <th className="text-left px-3 py-2.5 text-xs font-medium text-indigo-500 uppercase tracking-wide whitespace-nowrap bg-indigo-50/50">Empresa LinkedIn</th>
                 <th className="text-left px-3 py-2.5 text-xs font-medium text-indigo-500 uppercase tracking-wide whitespace-nowrap bg-indigo-50/50">Cargo LinkedIn</th>
+                <th className="px-3 py-2.5 w-16"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -425,6 +494,36 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
                         onCancel={() => setEditingCell(null)}
                       />
                     </td>
+
+                    {/* Botón Enviar a Pipe */}
+                    <td className="px-2 py-2 text-center" onClick={(e) => e.stopPropagation()}>
+                      {(() => {
+                        const state = rowSyncState[p.pipedrive_id] ?? "idle";
+                        const err = rowSyncError[p.pipedrive_id];
+                        if (state === "success") {
+                          return <span className="text-xs text-green-600 font-medium">✓ Enviado</span>;
+                        }
+                        if (state === "error") {
+                          return (
+                            <span className="text-xs text-red-500 cursor-help" title={err}>✗ Error</span>
+                          );
+                        }
+                        return (
+                          <button
+                            onClick={() => handleSyncClick(p)}
+                            disabled={!canSync(p) || state === "searching" || state === "syncing"}
+                            title="Enviar a Pipedrive"
+                            className={`px-2 py-1 text-xs rounded-md border transition-colors whitespace-nowrap ${
+                              canSync(p)
+                                ? "border-orange-300 text-orange-600 hover:bg-orange-50"
+                                : "border-gray-200 text-gray-300 cursor-not-allowed"
+                            } disabled:opacity-60`}
+                          >
+                            {state === "searching" || state === "syncing" ? "…" : "→ Pipe"}
+                          </button>
+                        );
+                      })()}
+                    </td>
                   </tr>
                 );
               })}
@@ -453,6 +552,59 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
               <button onClick={handleEnrich}
                 className="flex-1 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">
                 Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de selección de empresa (Ruta B) */}
+      {orgModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4">
+            <div>
+              <h3 className="text-base font-semibold text-gray-900">¿A qué empresa vincular al contacto?</h3>
+              <p className="text-sm text-gray-500 mt-1">
+                Empresa detectada: <strong className="text-gray-800">{orgModal.empresa}</strong>
+              </p>
+            </div>
+
+            {orgModal.results.length > 0 ? (
+              <div className="space-y-2">
+                <p className="text-xs text-gray-400 uppercase tracking-wide font-medium">Empresas en Pipedrive</p>
+                <ul className="divide-y divide-gray-100 border border-gray-200 rounded-lg overflow-hidden">
+                  {orgModal.results.map((org) => (
+                    <li key={org.id}>
+                      <button
+                        onClick={() => executeSyncAction(orgModal.personId, { action: "new_person_existing_org", orgId: org.id })}
+                        className="w-full flex items-center justify-between px-4 py-3 hover:bg-blue-50 transition-colors text-left"
+                      >
+                        <span className="text-sm text-gray-800 font-medium">{org.name}</span>
+                        <span className="text-xs text-gray-400">{org.people_count} contactos</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
+                No se encontraron empresas en Pipedrive con ese nombre.
+              </p>
+            )}
+
+            <div className="border-t border-gray-100 pt-3 space-y-2">
+              <button
+                onClick={() => executeSyncAction(orgModal.personId, { action: "new_person_new_org" })}
+                className="w-full flex items-center gap-2 px-4 py-2.5 border-2 border-dashed border-orange-300 text-orange-600 text-sm rounded-lg hover:bg-orange-50 transition-colors"
+              >
+                <span className="text-lg leading-none">＋</span>
+                <span>Crear nueva empresa: <strong>{orgModal.empresa}</strong> (label REVISAR)</span>
+              </button>
+              <button
+                onClick={() => { setOrgModal(null); setRowSyncState((prev) => ({ ...prev, [orgModal.personId]: "idle" })); }}
+                className="w-full py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                Cancelar
               </button>
             </div>
           </div>
