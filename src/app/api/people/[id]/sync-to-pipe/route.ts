@@ -53,14 +53,24 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     });
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: 502 });
 
-    // Actualizar nuestra BD: sincronizar rol con cargo_linkedin
+    // Actualizar BD local: rol, linkedin_url y timestamp de sync
+    const dbUpdate: Record<string, unknown> = { synced_at: new Date().toISOString() };
+    if (person.cargo_linkedin !== null) dbUpdate.rol = person.cargo_linkedin;
+    if (person.linkedin_url !== null) dbUpdate.linkedin_url = person.linkedin_url;
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (adminClient as any)
+    const { error: dbError } = await (adminClient as any)
       .from("people")
-      .update({ rol: person.cargo_linkedin, synced_at: new Date().toISOString() })
+      .update(dbUpdate)
       .eq("pipedrive_id", pipedriveId);
 
-    return NextResponse.json({ ok: true, action: "update_only" });
+    if (dbError) console.error("[sync-to-pipe Ruta A] Error BD:", dbError.message);
+
+    return NextResponse.json({
+      ok: true,
+      action: "update_only",
+      updated: { rol: person.cargo_linkedin, linkedin_url: person.linkedin_url },
+    });
   }
 
   // ── Ruta B: nueva empresa → nuevo contacto ────────────────────────────────
