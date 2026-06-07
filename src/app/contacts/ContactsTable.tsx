@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { EnrichResult } from "@/app/api/people/enrich/route";
 
 export type Person = {
@@ -94,6 +94,17 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
   const [rowSyncState, setRowSyncState] = useState<Record<number, RowSyncState>>({});
   const [rowSyncError, setRowSyncError] = useState<Record<number, string>>({});
   const [orgModal, setOrgModal] = useState<OrgModal | null>(null);
+
+  // Sincronizar con nuevos datos del servidor (paginación, filtros)
+  useEffect(() => {
+    setPeople(initialPeople);
+    setSelected(new Set());
+    setLocalLinkedIn({});
+    setEditingCell(null);
+    setEnrichDone(null);
+    setRowSyncState({});
+    setRowSyncError({});
+  }, [initialPeople]);
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
