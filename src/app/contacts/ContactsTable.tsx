@@ -249,8 +249,24 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      const data = await res.json() as { ok?: boolean; error?: string };
+      const data = await res.json() as {
+        ok?: boolean; error?: string;
+        updated?: { rol: string | null; linkedin_url: string | null };
+      };
       if (!res.ok || !data.ok) throw new Error(data.error ?? "Error desconocido");
+
+      // Actualizar el estado local de la tabla para reflejar los cambios sin recargar
+      if (data.updated) {
+        setPeople((prev) => prev.map((p) => {
+          if (p.pipedrive_id !== personId) return p;
+          return {
+            ...p,
+            ...(data.updated!.rol !== null ? { rol: data.updated!.rol } : {}),
+            ...(data.updated!.linkedin_url !== null ? { linkedin_url: data.updated!.linkedin_url } : {}),
+          };
+        }));
+      }
+
       setRowSyncState((prev) => ({ ...prev, [personId]: "success" }));
       setTimeout(() => setRowSyncState((prev) => ({ ...prev, [personId]: "idle" })), 3000);
     } catch (err) {
