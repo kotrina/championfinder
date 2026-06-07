@@ -96,6 +96,8 @@ export type Database = {
           won_deals: number;
           total_activities: number;
           location: string | null;
+          empresa_linkedin: string | null;
+          cargo_linkedin: string | null;
           synced_at: string | null;
           created_at: string;
         };
@@ -111,6 +113,8 @@ export type Database = {
           won_deals?: number;
           total_activities?: number;
           location?: string | null;
+          empresa_linkedin?: string | null;
+          cargo_linkedin?: string | null;
           synced_at?: string | null;
           created_at?: string;
         };
@@ -125,6 +129,8 @@ export type Database = {
           won_deals?: number;
           total_activities?: number;
           location?: string | null;
+          empresa_linkedin?: string | null;
+          cargo_linkedin?: string | null;
           synced_at?: string | null;
         };
       };
