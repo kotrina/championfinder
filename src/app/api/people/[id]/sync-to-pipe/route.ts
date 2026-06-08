@@ -130,12 +130,23 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     synced_at: new Date().toISOString(),
   });
 
-  // Actualizar contacto original en Pipedrive con empresa anterior y enlace al nuevo perfil
-  const pipedriveDomain = process.env.NEXT_PUBLIC_PIPEDRIVE_DOMAIN ?? "app";
-  const newProfileUrl = `https://${pipedriveDomain}.pipedrive.com/person/${newPipedriveId}`;
+  // Obtener org_id del contacto original en Pipedrive (campo tipo Organization)
+  let originalOrgId: number | null = null;
+  try {
+    const apiToken = process.env.PIPEDRIVE_API_TOKEN;
+    const origRes = await fetch(`https://api.pipedrive.com/v1/persons/${pipedriveId}?api_token=${apiToken}`);
+    const origBody = await origRes.json() as { success: boolean; data?: { org_id?: { value: number } | null } };
+    if (origBody.success && origBody.data?.org_id?.value) {
+      originalOrgId = origBody.data.org_id.value;
+    }
+  } catch {
+    console.error("[sync-to-pipe Ruta B] No se pudo obtener org_id del contacto original");
+  }
+
+  // Actualizar contacto original con Previous Company (org ID) y Previous Profile (person ID)
   const previousResult = await updatePersonPreviousFields(pipedriveId, {
-    previousCompany: person.organizacion ?? "",
-    newProfileUrl,
+    previousOrgId: originalOrgId,
+    newPersonId: newPipedriveId,
   });
   if (!previousResult.ok) {
     console.error("[sync-to-pipe Ruta B] Error actualizando campos Previous en original:", previousResult.error);
