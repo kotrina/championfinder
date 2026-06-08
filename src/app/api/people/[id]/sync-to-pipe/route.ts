@@ -131,11 +131,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   });
 
   // Actualizar contacto original en Pipedrive con empresa anterior y enlace al nuevo perfil
-  // (fire-and-forget: si falla no bloquea el flujo)
-  const pipedriveDoomain = process.env.NEXT_PUBLIC_PIPEDRIVE_DOMAIN ?? "app";
-  const newProfileUrl = `https://${pipedriveDoomain}.pipedrive.com/person/${newPipedriveId}`;
+  const pipedriveDomain = process.env.NEXT_PUBLIC_PIPEDRIVE_DOMAIN ?? "app";
+  const newProfileUrl = `https://${pipedriveDomain}.pipedrive.com/person/${newPipedriveId}`;
   const previousResult = await updatePersonPreviousFields(pipedriveId, {
-    previousCompany: person.organizacion,
+    previousCompany: person.organizacion ?? "",
     newProfileUrl,
   });
   if (!previousResult.ok) {
@@ -147,5 +146,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     action: body.action,
     newPipedriveId,
     orgId,
+    previousFieldsUpdated: previousResult.ok,
+    ...(previousResult.ok ? {} : { previousFieldsError: previousResult.error }),
   });
 }

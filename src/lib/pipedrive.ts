@@ -59,11 +59,12 @@ export async function updatePersonFields(
 
 export async function updatePersonPreviousFields(
   originalPipedriveId: number,
-  fields: { previousCompany: string | null; newProfileUrl: string }
+  fields: { previousCompany: string; newProfileUrl: string }
 ): Promise<PipedriveResult> {
-  const body: Record<string, unknown> = {};
-  if (fields.previousCompany) body[PREVIOUS_COMPANY_FIELD] = fields.previousCompany;
-  body[PREVIOUS_PROFILE_FIELD] = fields.newProfileUrl;
+  const body: Record<string, unknown> = {
+    [PREVIOUS_COMPANY_FIELD]: fields.previousCompany,
+    [PREVIOUS_PROFILE_FIELD]: fields.newProfileUrl,
+  };
 
   const r = await pdFetch(`persons/${originalPipedriveId}`, {
     method: "PUT",
