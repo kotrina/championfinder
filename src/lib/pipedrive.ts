@@ -1,5 +1,7 @@
 const JOB_TITLE_FIELD = process.env.PIPEDRIVE_JOB_TITLE_FIELD ?? "b711dbcdfccfab3c6796761d032f71936621a027";
 const LINKEDIN_FIELD = process.env.PIPEDRIVE_LINKEDIN_FIELD ?? "8405c428db352f540cf0ee0671ec3f963811530d";
+const PREVIOUS_COMPANY_FIELD = process.env.PIPEDRIVE_PREVIOUS_COMPANY_FIELD ?? "9f947fc44eab9d72bcfad5d157e31113a82e00a3";
+const PREVIOUS_PROFILE_FIELD = process.env.PIPEDRIVE_PREVIOUS_PROFILE_FIELD ?? "2aa1a516349fa059ed0452a0f3f9939b796e6c2a";
 const REVISAR_PERSON_LABEL = parseInt(process.env.PIPEDRIVE_REVISAR_PERSON_LABEL ?? "372", 10);
 const REVISAR_ORG_LABEL = parseInt(process.env.PIPEDRIVE_REVISAR_ORG_LABEL ?? "371", 10);
 
@@ -46,6 +48,27 @@ export async function updatePersonFields(
   if (Object.keys(body).length === 0) return { ok: true };
 
   const r = await pdFetch(`persons/${pipedriveId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  return r.ok ? { ok: true } : { ok: false, error: r.error ?? `HTTP ${r.status}` };
+}
+
+// ── updatePersonPreviousFields (Ruta B: tracking empresa anterior + nuevo perfil) ──
+
+export async function updatePersonPreviousFields(
+  originalPipedriveId: number,
+  fields: { previousOrgId: number | null; newPersonId: number }
+): Promise<PipedriveResult> {
+  const body: Record<string, unknown> = {
+    [PREVIOUS_PROFILE_FIELD]: fields.newPersonId,
+  };
+  if (fields.previousOrgId !== null) {
+    body[PREVIOUS_COMPANY_FIELD] = fields.previousOrgId;
+  }
+
+  const r = await pdFetch(`persons/${originalPipedriveId}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),

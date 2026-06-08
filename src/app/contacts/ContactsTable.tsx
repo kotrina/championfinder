@@ -388,8 +388,8 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
                 {!hiddenCols.total_activities && <th className="text-right px-3 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap">Activ.</th>}
                 <th className="text-left px-3 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap">LinkedIn URL</th>
                 {/* Columnas LinkedIn — color índigo */}
-                <th className="text-left px-3 py-2.5 text-xs font-medium text-indigo-500 uppercase tracking-wide whitespace-nowrap bg-indigo-50/50">Empresa LinkedIn</th>
-                <th className="text-left px-3 py-2.5 text-xs font-medium text-indigo-500 uppercase tracking-wide whitespace-nowrap bg-indigo-50/50">Cargo LinkedIn</th>
+                <th className="text-left px-3 py-2.5 text-xs font-medium text-indigo-500 uppercase tracking-wide whitespace-nowrap bg-indigo-50/50 w-[120px]">Empresa LI</th>
+                <th className="text-left px-3 py-2.5 text-xs font-medium text-indigo-500 uppercase tracking-wide whitespace-nowrap bg-indigo-50/50 w-[100px]">Cargo LI</th>
                 <th className="px-3 py-2.5 w-16"></th>
               </tr>
             </thead>
@@ -418,10 +418,17 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
                       <td className="px-3 py-2 text-gray-400 font-mono text-xs cursor-pointer"
                         onClick={() => setDetailPerson(p)}>{p.pipedrive_id}</td>
                     )}
-                    <td className="px-3 py-2 cursor-pointer max-w-[110px]" onClick={() => setDetailPerson(p)}>
-                      <span className="font-medium text-gray-900 text-sm truncate block">
+                    <td className="px-3 py-2 max-w-[110px]">
+                      <a
+                        href={`https://${process.env.NEXT_PUBLIC_PIPEDRIVE_DOMAIN ?? "app"}.pipedrive.com/person/${p.pipedrive_id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="font-medium text-blue-600 hover:underline text-sm truncate block"
+                        title="Ver en Pipedrive"
+                      >
                         {[p.nombre, p.apellidos].filter(Boolean).join(" ") || "—"}
-                      </span>
+                      </a>
                     </td>
                     <td className="px-3 py-2 text-gray-600 text-xs truncate max-w-[140px] cursor-pointer"
                       onClick={() => setDetailPerson(p)}>{p.email ?? "—"}</td>
@@ -498,7 +505,7 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
                       )}
                     </td>
                     {/* Empresa LinkedIn — editable */}
-                    <td className="px-2 py-1.5 bg-indigo-50/30" onClick={(e) => e.stopPropagation()}>
+                    <td className="px-2 py-1.5 bg-indigo-50/30 max-w-[120px] overflow-hidden" onClick={(e) => e.stopPropagation()}>
                       <LinkedInCell
                         value={editingEmpresa ? editingCell!.value : empresaVal}
                         editing={editingEmpresa}
@@ -510,7 +517,7 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
                       />
                     </td>
                     {/* Cargo LinkedIn — editable */}
-                    <td className="px-2 py-1.5 bg-indigo-50/30" onClick={(e) => e.stopPropagation()}>
+                    <td className="px-2 py-1.5 bg-indigo-50/30 max-w-[100px] overflow-hidden" onClick={(e) => e.stopPropagation()}>
                       <LinkedInCell
                         value={editingCargo ? editingCell!.value : cargoVal}
                         editing={editingCargo}
