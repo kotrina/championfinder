@@ -143,10 +143,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     console.error("[sync-to-pipe Ruta B] No se pudo obtener org_id del contacto original");
   }
 
-  // Actualizar contacto original con Previous Company (org ID) y Previous Profile (person ID)
-  const previousResult = await updatePersonPreviousFields(pipedriveId, {
+  // Actualizar NUEVO contacto con Previous Company (org anterior) y Previous Profile (contacto anterior)
+  const previousResult = await updatePersonPreviousFields(newPipedriveId, {
     previousOrgId: originalOrgId,
-    newPersonId: newPipedriveId,
+    newPersonId: pipedriveId,  // el contacto "nuevo" apunta al original como su perfil anterior
   });
   if (!previousResult.ok) {
     console.error("[sync-to-pipe Ruta B] Error actualizando campos Previous en original:", previousResult.error);
