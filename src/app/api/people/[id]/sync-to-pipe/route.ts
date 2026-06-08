@@ -3,6 +3,7 @@ import { createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   updatePersonFields,
+  updatePersonPreviousFields,
   createOrganization,
   createPersonInPipedrive,
 } from "@/lib/pipedrive";
@@ -128,6 +129,18 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     total_activities: 0,
     synced_at: new Date().toISOString(),
   });
+
+  // Actualizar contacto original en Pipedrive con empresa anterior y enlace al nuevo perfil
+  // (fire-and-forget: si falla no bloquea el flujo)
+  const pipedriveDoomain = process.env.NEXT_PUBLIC_PIPEDRIVE_DOMAIN ?? "app";
+  const newProfileUrl = `https://${pipedriveDoomain}.pipedrive.com/person/${newPipedriveId}`;
+  const previousResult = await updatePersonPreviousFields(pipedriveId, {
+    previousCompany: person.organizacion,
+    newProfileUrl,
+  });
+  if (!previousResult.ok) {
+    console.error("[sync-to-pipe Ruta B] Error actualizando campos Previous en original:", previousResult.error);
+  }
 
   return NextResponse.json({
     ok: true,
