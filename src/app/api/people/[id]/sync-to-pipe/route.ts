@@ -3,6 +3,7 @@ import { createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   updatePersonFields,
+  updatePersonPreviousFields,
   createOrganization,
   createPersonInPipedrive,
 } from "@/lib/pipedrive";
@@ -129,10 +130,34 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     synced_at: new Date().toISOString(),
   });
 
+  // Obtener org_id del contacto original en Pipedrive (campo tipo Organization)
+  let originalOrgId: number | null = null;
+  try {
+    const apiToken = process.env.PIPEDRIVE_API_TOKEN;
+    const origRes = await fetch(`https://api.pipedrive.com/v1/persons/${pipedriveId}?api_token=${apiToken}`);
+    const origBody = await origRes.json() as { success: boolean; data?: { org_id?: { value: number } | null } };
+    if (origBody.success && origBody.data?.org_id?.value) {
+      originalOrgId = origBody.data.org_id.value;
+    }
+  } catch {
+    console.error("[sync-to-pipe Ruta B] No se pudo obtener org_id del contacto original");
+  }
+
+  // Actualizar NUEVO contacto con Previous Company (org anterior) y Previous Profile (contacto anterior)
+  const previousResult = await updatePersonPreviousFields(newPipedriveId, {
+    previousOrgId: originalOrgId,
+    newPersonId: pipedriveId,  // el contacto "nuevo" apunta al original como su perfil anterior
+  });
+  if (!previousResult.ok) {
+    console.error("[sync-to-pipe Ruta B] Error actualizando campos Previous en original:", previousResult.error);
+  }
+
   return NextResponse.json({
     ok: true,
     action: body.action,
     newPipedriveId,
     orgId,
+    previousFieldsUpdated: previousResult.ok,
+    ...(previousResult.ok ? {} : { previousFieldsError: previousResult.error }),
   });
 }
