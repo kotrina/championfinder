@@ -418,10 +418,17 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
                       <td className="px-3 py-2 text-gray-400 font-mono text-xs cursor-pointer"
                         onClick={() => setDetailPerson(p)}>{p.pipedrive_id}</td>
                     )}
-                    <td className="px-3 py-2 cursor-pointer max-w-[110px]" onClick={() => setDetailPerson(p)}>
-                      <span className="font-medium text-gray-900 text-sm truncate block">
+                    <td className="px-3 py-2 max-w-[110px]">
+                      <a
+                        href={`https://${process.env.NEXT_PUBLIC_PIPEDRIVE_DOMAIN ?? "app"}.pipedrive.com/person/${p.pipedrive_id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="font-medium text-blue-600 hover:underline text-sm truncate block"
+                        title="Ver en Pipedrive"
+                      >
                         {[p.nombre, p.apellidos].filter(Boolean).join(" ") || "—"}
-                      </span>
+                      </a>
                     </td>
                     <td className="px-3 py-2 text-gray-600 text-xs truncate max-w-[140px] cursor-pointer"
                       onClick={() => setDetailPerson(p)}>{p.email ?? "—"}</td>
