@@ -22,7 +22,7 @@ export default async function RunDetailPage({ params }: { params: Promise<{ id: 
     .eq("id", id)
     .single() as { data: Run | null };
 
-  if (!run) redirect("/dashboard");
+  if (!run) redirect("/contacts");
 
   let contacts: Contact[] = [];
   if (run.status === "done") {
@@ -39,7 +39,7 @@ export default async function RunDetailPage({ params }: { params: Promise<{ id: 
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b border-gray-200">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center gap-3">
-          <Link href="/dashboard" className="text-sm text-gray-400 hover:text-gray-700">
+          <Link href="/contacts" className="text-sm text-gray-400 hover:text-gray-700">
             ← Volver
           </Link>
           <h1 className="text-lg font-semibold text-gray-900">{run.filename}</h1>

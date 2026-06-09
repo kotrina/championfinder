@@ -4,7 +4,7 @@ import { LogoutButton } from "./LogoutButton";
 type Props = {
   email: string;
   isAdmin?: boolean;
-  activePage?: "dashboard" | "contacts" | "roles" | "settings" | "users";
+  activePage?: "contacts" | "roles" | "settings" | "users";
 };
 
 export function AppHeader({ email, isAdmin, activePage }: Props) {
@@ -19,7 +19,7 @@ export function AppHeader({ email, isAdmin, activePage }: Props) {
     <header className="bg-white border-b border-gray-200">
       <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-6">
-          <Link href="/dashboard" className="text-lg font-semibold text-gray-900">
+          <Link href="/" className="text-lg font-semibold text-gray-900">
             championfinder
           </Link>
           <nav className="flex gap-4 text-sm">
