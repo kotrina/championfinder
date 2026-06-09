@@ -309,6 +309,8 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
       setDetailPerson(null);
       setDeleteConfirm(false);
     } catch {
+      // mantener panel abierto para reintentar
+    } finally {
       setDeleting(false);
     }
   }
