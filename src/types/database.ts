@@ -98,6 +98,8 @@ export type Database = {
           location: string | null;
           empresa_linkedin: string | null;
           cargo_linkedin: string | null;
+          email_linkedin: string | null;
+          email_linkedin_status: string | null;
           synced_at: string | null;
           created_at: string;
         };
@@ -115,6 +117,8 @@ export type Database = {
           location?: string | null;
           empresa_linkedin?: string | null;
           cargo_linkedin?: string | null;
+          email_linkedin?: string | null;
+          email_linkedin_status?: string | null;
           synced_at?: string | null;
           created_at?: string;
         };
@@ -131,6 +135,8 @@ export type Database = {
           location?: string | null;
           empresa_linkedin?: string | null;
           cargo_linkedin?: string | null;
+          email_linkedin?: string | null;
+          email_linkedin_status?: string | null;
           synced_at?: string | null;
         };
       };
