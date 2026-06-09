@@ -117,6 +117,7 @@ export type CreatePersonData = {
   orgId: number;
   rol: string | null;
   linkedinUrl: string | null;
+  emailLinkedin?: string | null;
 };
 
 export async function createPersonInPipedrive(data: CreatePersonData): Promise<{ ok: true; id: number } | { ok: false; error: string }> {
@@ -127,6 +128,7 @@ export async function createPersonInPipedrive(data: CreatePersonData): Promise<{
   };
   if (data.rol) body[JOB_TITLE_FIELD] = data.rol;
   if (data.linkedinUrl) body[LINKEDIN_FIELD] = data.linkedinUrl;
+  if (data.emailLinkedin) body.email = [{ value: data.emailLinkedin, primary: true, label: "work" }];
 
   const r = await pdFetch("persons", {
     method: "POST",

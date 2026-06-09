@@ -29,7 +29,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: person } = await (adminClient as any)
     .from("people")
-    .select("pipedrive_id, nombre, apellidos, organizacion, rol, linkedin_url, empresa_linkedin, cargo_linkedin")
+    .select("pipedrive_id, nombre, apellidos, organizacion, rol, linkedin_url, empresa_linkedin, cargo_linkedin, email_linkedin")
     .eq("pipedrive_id", pipedriveId)
     .single() as {
       data: {
@@ -41,6 +41,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         linkedin_url: string | null;
         empresa_linkedin: string | null;
         cargo_linkedin: string | null;
+        email_linkedin: string | null;
       } | null;
     };
 
@@ -94,6 +95,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     orgId,
     rol: person.cargo_linkedin,
     linkedinUrl: person.linkedin_url,
+    emailLinkedin: person.email_linkedin,
   });
 
   if (!personResult.ok) {
