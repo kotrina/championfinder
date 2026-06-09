@@ -81,6 +81,17 @@ export function ContactsFilters({ roles, statuses }: Props) {
         onChange={(e) => update("location", e.target.value)}
         className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-40"
       />
+
+      {/* Solo con LinkedIn */}
+      <label className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white cursor-pointer hover:border-blue-400 transition-colors select-none">
+        <input
+          type="checkbox"
+          checked={searchParams.get("has_linkedin") === "1"}
+          onChange={(e) => update("has_linkedin", e.target.checked ? "1" : "")}
+          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+        />
+        <span className="text-gray-700">Con LinkedIn</span>
+      </label>
     </div>
   );
 }

@@ -16,6 +16,7 @@ type SearchParams = {
   rol_q?: string;
   status?: string;
   location?: string;
+  has_linkedin?: string;
   page?: string;
 };
 
@@ -54,6 +55,7 @@ export default async function ContactsPage({
   if (params.rol_q) query = query.ilike("rol", `%${params.rol_q}%`);
   if (params.status) query = query.eq("marketing_status", params.status);
   if (params.location) query = query.ilike("location", `%${params.location}%`);
+  if (params.has_linkedin === "1") query = query.not("linkedin_url", "is", null).neq("linkedin_url", "");
 
   const { data: people, count } = await query
     .order("apellidos", { ascending: true })
@@ -83,6 +85,7 @@ export default async function ContactsPage({
     if (params.rol_q) sp.set("rol_q", params.rol_q);
     if (params.status) sp.set("status", params.status);
     if (params.location) sp.set("location", params.location);
+    if (params.has_linkedin) sp.set("has_linkedin", params.has_linkedin);
     sp.set("page", String(p));
     return `/contacts?${sp.toString()}`;
   }
@@ -114,7 +117,7 @@ export default async function ContactsPage({
         {/* Tabla */}
         {!people || people.length === 0 ? (
           <div className="bg-white border border-gray-200 rounded-xl text-center py-16 text-sm text-gray-400">
-            {count === 0 && !params.q && !params.org && !params.rol && !params.status && !params.location
+            {count === 0 && !params.q && !params.org && !params.rol && !params.status && !params.location && !params.has_linkedin
               ? <><Link href="/settings" className="text-blue-600 hover:underline">Sincroniza desde Pipedrive</Link> para ver contactos.</>
               : "No hay resultados para estos filtros."}
           </div>
