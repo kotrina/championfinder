@@ -17,16 +17,13 @@ export type Person = {
   location: string | null;
   empresa_linkedin: string | null;
   cargo_linkedin: string | null;
-  email_linkedin: string | null;
-  email_linkedin_status: string | null;
 };
 
-type EditableField = "empresa_linkedin" | "cargo_linkedin" | "linkedin_url" | "email_linkedin";
+type EditableField = "empresa_linkedin" | "cargo_linkedin" | "linkedin_url";
 type EditingCell = { id: number; field: EditableField; value: string };
 type HiddenCols = { pipedrive_id: boolean; location: boolean; won_deals: boolean; total_activities: boolean };
-type LocalFields = { empresa?: string; cargo?: string; linkedin?: string; emailLinkedin?: string };
+type LocalFields = { empresa?: string; cargo?: string; linkedin?: string };
 type RowSyncState = "idle" | "searching" | "syncing" | "success" | "error";
-type EmailLookupState = "idle" | "pending" | "not_found";
 type OrgModal = {
   personId: number;
   empresa: string;
@@ -97,9 +94,6 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
   const [rowSyncState, setRowSyncState] = useState<Record<number, RowSyncState>>({});
   const [rowSyncError, setRowSyncError] = useState<Record<number, string>>({});
   const [orgModal, setOrgModal] = useState<OrgModal | null>(null);
-  // Per-row email lookup
-  const [emailLookupState, setEmailLookupState] = useState<Record<number, EmailLookupState>>({});
-  const [emailLookupConfirm, setEmailLookupConfirm] = useState<number | null>(null);
   // Delete contact
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -113,7 +107,6 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
     setEnrichDone(null);
     setRowSyncState({});
     setRowSyncError({});
-    setEmailLookupState({});
   }, [initialPeople]);
 
   // ── Helpers ────────────────────────────────────────────────────────────────
@@ -122,7 +115,6 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
     const local = localLinkedIn[p.pipedrive_id];
     if (field === "empresa_linkedin") return local?.empresa !== undefined ? local.empresa : (p.empresa_linkedin ?? "");
     if (field === "cargo_linkedin") return local?.cargo !== undefined ? local.cargo : (p.cargo_linkedin ?? "");
-    if (field === "email_linkedin") return local?.emailLinkedin !== undefined ? local.emailLinkedin : (p.email_linkedin ?? "");
     return local?.linkedin !== undefined ? local.linkedin : (p.linkedin_url ?? "");
   }
 
@@ -168,7 +160,6 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
           ...prev[id],
           ...(field === "empresa_linkedin" ? { empresa: value }
             : field === "cargo_linkedin" ? { cargo: value }
-            : field === "email_linkedin" ? { emailLinkedin: value }
             : { linkedin: value }),
         },
       }));
@@ -315,22 +306,6 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
     }
   }
 
-  // ── Email Lookup ──────────────────────────────────────────────────────────
-
-  async function handleEmailLookup(personId: number) {
-    setEmailLookupConfirm(null);
-    setEmailLookupState((prev) => ({ ...prev, [personId]: "pending" }));
-    try {
-      const res = await fetch(`/api/people/${personId}/lookup-email`, { method: "POST" });
-      const data = await res.json() as { error?: string };
-      if (!res.ok) throw new Error(data.error ?? "Error al lanzar búsqueda");
-    } catch (err) {
-      // Mostrar error y volver a idle
-      setEmailLookupState((prev) => ({ ...prev, [personId]: "idle" }));
-      alert(err instanceof Error ? err.message : "Error al buscar email");
-    }
-  }
-
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
@@ -435,7 +410,6 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
                 {/* Columnas LinkedIn — color índigo */}
                 <th className="text-left px-3 py-2.5 text-xs font-medium text-indigo-500 uppercase tracking-wide whitespace-nowrap bg-indigo-50/50 w-[120px]">Empresa LI</th>
                 <th className="text-left px-3 py-2.5 text-xs font-medium text-indigo-500 uppercase tracking-wide whitespace-nowrap bg-indigo-50/50 w-[100px]">Cargo LI</th>
-                <th className="text-left px-3 py-2.5 text-xs font-medium text-indigo-500 uppercase tracking-wide whitespace-nowrap bg-indigo-50/50 w-[130px]">Email LI</th>
                 <th className="px-3 py-2.5 w-16"></th>
               </tr>
             </thead>
@@ -575,63 +549,6 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
                       />
                     </td>
 
-                    {/* Email LinkedIn — editable + botón lookup */}
-                    {(() => {
-                      const emailVal = getLinkedIn(p, "email_linkedin");
-                      const editingEmail = editingCell?.id === p.pipedrive_id && editingCell.field === "email_linkedin";
-                      const lookupState = emailLookupState[p.pipedrive_id] ??
-                        (p.email_linkedin_status === "pending" ? "pending" :
-                         p.email_linkedin_status === "not_found" ? "not_found" : "idle");
-                      const hasLinkedin = !!getLinkedIn(p, "linkedin_url");
-                      return (
-                        <td className="px-2 py-1.5 bg-indigo-50/30 max-w-[130px] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-                          <div className="flex items-center gap-1">
-                            {/* Celda editable */}
-                            <div className="flex-1 min-w-0">
-                              <LinkedInCell
-                                value={editingEmail ? editingCell!.value : emailVal}
-                                editing={editingEmail}
-                                saving={savingCell && editingEmail}
-                                onStart={() => startEdit(p.pipedrive_id, "email_linkedin", emailVal)}
-                                onChange={(v) => setEditingCell((prev) => prev ? { ...prev, value: v } : prev)}
-                                onSave={saveCell}
-                                onCancel={() => setEditingCell(null)}
-                              />
-                            </div>
-                            {/* Botón ✉ */}
-                            {!editingEmail && (
-                              <button
-                                onClick={() => hasLinkedin && setEmailLookupConfirm(p.pipedrive_id)}
-                                disabled={!hasLinkedin || lookupState === "pending"}
-                                title={!hasLinkedin ? "Necesita LinkedIn URL" : "Buscar email profesional"}
-                                className={`flex-shrink-0 p-1 rounded transition-colors ${
-                                  lookupState === "pending"
-                                    ? "text-indigo-400 cursor-wait"
-                                    : lookupState === "not_found"
-                                    ? "text-gray-300"
-                                    : hasLinkedin
-                                    ? "text-indigo-400 hover:text-indigo-600 hover:bg-indigo-100"
-                                    : "text-gray-200 cursor-not-allowed"
-                                }`}
-                              >
-                                {lookupState === "pending" ? (
-                                  <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
-                                  </svg>
-                                ) : (
-                                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
-                                    <path d="M3 4a2 2 0 00-2 2v1.161l8.441 4.221a1.25 1.25 0 001.118 0L19 7.162V6a2 2 0 00-2-2H3z" />
-                                    <path d="M19 8.839l-7.77 3.885a2.75 2.75 0 01-2.46 0L1 8.839V14a2 2 0 002 2h14a2 2 0 002-2V8.839z" />
-                                  </svg>
-                                )}
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      );
-                    })()}
-
                     {/* Botón Enviar a Pipe */}
                     <td className="px-2 py-2 text-center" onClick={(e) => e.stopPropagation()}>
                       {(() => {
@@ -756,50 +673,6 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
                 className="w-full py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
               >
                 Cancelar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal confirmación búsqueda de email */}
-      {emailLookupConfirm !== null && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 space-y-4">
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-9 h-9 bg-indigo-100 rounded-full flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-indigo-600">
-                  <path d="M3 4a2 2 0 00-2 2v1.161l8.441 4.221a1.25 1.25 0 001.118 0L19 7.162V6a2 2 0 00-2-2H3z" />
-                  <path d="M19 8.839l-7.77 3.885a2.75 2.75 0 01-2.46 0L1 8.839V14a2 2 0 002 2h14a2 2 0 002-2V8.839z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-base font-semibold text-gray-900">Buscar email profesional</h3>
-                <p className="text-sm text-gray-600 mt-1">
-                  Se consultará el email profesional de este contacto via EnrichLayer.
-                </p>
-              </div>
-            </div>
-            <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5 space-y-1">
-              <p className="text-xs font-medium text-amber-800">⚠ Proceso asíncrono</p>
-              <p className="text-xs text-amber-700">
-                La búsqueda no es inmediata. El resultado llegará en unos minutos a través de un webhook.
-                <strong> Necesitarás refrescar la página</strong> para ver el email cuando esté disponible.
-              </p>
-            </div>
-            <p className="text-xs text-gray-400">Coste: 3 créditos de EnrichLayer.</p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setEmailLookupConfirm(null)}
-                className="flex-1 py-2 border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => handleEmailLookup(emailLookupConfirm)}
-                className="flex-1 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
-              >
-                Buscar email
               </button>
             </div>
           </div>

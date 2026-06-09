@@ -40,7 +40,7 @@ export default async function ContactsPage({
   let query = (supabase as any)
     .from("people")
     .select(
-      "pipedrive_id, nombre, apellidos, email, organizacion, marketing_status, rol, linkedin_url, won_deals, total_activities, location, empresa_linkedin, cargo_linkedin, email_linkedin, email_linkedin_status",
+      "pipedrive_id, nombre, apellidos, email, organizacion, marketing_status, rol, linkedin_url, won_deals, total_activities, location, empresa_linkedin, cargo_linkedin",
       { count: "exact" }
     );
 
