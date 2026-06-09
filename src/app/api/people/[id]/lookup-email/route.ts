@@ -28,7 +28,13 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   const apiKey = process.env.ENRICHLAYER_API_KEY;
   if (!apiKey) return NextResponse.json({ error: "ENRICHLAYER_API_KEY no configurada" }, { status: 500 });
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  if (!appUrl || appUrl.includes("localhost") || appUrl.includes("127.0.0.1")) {
+    return NextResponse.json({
+      error: "Esta función requiere una URL pública. Configura NEXT_PUBLIC_APP_URL en Vercel con la URL de producción.",
+    }, { status: 400 });
+  }
+
   const callbackUrl = `${appUrl}/api/webhooks/email-lookup?person_id=${pipedriveId}`;
 
   // Marcar como pending en BD

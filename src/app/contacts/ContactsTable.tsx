@@ -302,13 +302,12 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
     setEmailLookupState((prev) => ({ ...prev, [personId]: "pending" }));
     try {
       const res = await fetch(`/api/people/${personId}/lookup-email`, { method: "POST" });
-      if (!res.ok) {
-        const data = await res.json() as { error?: string };
-        throw new Error(data.error ?? "Error");
-      }
-    } catch {
-      // Si falla, volver a idle
+      const data = await res.json() as { error?: string };
+      if (!res.ok) throw new Error(data.error ?? "Error al lanzar búsqueda");
+    } catch (err) {
+      // Mostrar error y volver a idle
       setEmailLookupState((prev) => ({ ...prev, [personId]: "idle" }));
+      alert(err instanceof Error ? err.message : "Error al buscar email");
     }
   }
 
