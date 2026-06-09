@@ -40,7 +40,7 @@ export default async function ContactsPage({
   let query = (supabase as any)
     .from("people")
     .select(
-      "pipedrive_id, nombre, apellidos, email, organizacion, marketing_status, rol, linkedin_url, won_deals, total_activities, location, empresa_linkedin, cargo_linkedin, email_linkedin, email_linkedin_status",
+      "pipedrive_id, nombre, apellidos, email, organizacion, marketing_status, rol, linkedin_url, won_deals, total_activities, location, empresa_linkedin, cargo_linkedin",
       { count: "exact" }
     );
 
@@ -58,7 +58,8 @@ export default async function ContactsPage({
   if (params.has_linkedin === "1") query = query.not("linkedin_url", "is", null).neq("linkedin_url", "");
 
   const { data: people, count } = await query
-    .order("apellidos", { ascending: true })
+    .order("apellidos", { ascending: true, nullsFirst: false })
+    .order("nombre",    { ascending: true, nullsFirst: false })
     .range(from, to) as { data: Person[] | null; count: number | null };
 
   const totalPages = Math.ceil((count ?? 0) / PAGE_SIZE);
