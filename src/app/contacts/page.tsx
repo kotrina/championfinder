@@ -58,7 +58,8 @@ export default async function ContactsPage({
   if (params.has_linkedin === "1") query = query.not("linkedin_url", "is", null).neq("linkedin_url", "");
 
   const { data: people, count } = await query
-    .order("apellidos", { ascending: true })
+    .order("apellidos", { ascending: true, nullsFirst: false })
+    .order("nombre",    { ascending: true, nullsFirst: false })
     .range(from, to) as { data: Person[] | null; count: number | null };
 
   const totalPages = Math.ceil((count ?? 0) / PAGE_SIZE);
