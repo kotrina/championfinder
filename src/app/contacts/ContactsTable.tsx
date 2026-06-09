@@ -100,6 +100,9 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
   // Per-row email lookup
   const [emailLookupState, setEmailLookupState] = useState<Record<number, EmailLookupState>>({});
   const [emailLookupConfirm, setEmailLookupConfirm] = useState<number | null>(null);
+  // Delete contact
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // Sincronizar con nuevos datos del servidor (paginación, filtros)
   useEffect(() => {
@@ -292,6 +295,23 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
     } catch (err) {
       setRowSyncState((prev) => ({ ...prev, [personId]: "error" }));
       setRowSyncError((prev) => ({ ...prev, [personId]: err instanceof Error ? err.message : "Error" }));
+    }
+  }
+
+  // ── Delete contact ────────────────────────────────────────────────────────
+
+  async function handleDelete(personId: number) {
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/people/${personId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error();
+      setPeople((prev) => prev.filter((p) => p.pipedrive_id !== personId));
+      setDetailPerson(null);
+      setDeleteConfirm(false);
+    } catch {
+      // mantener panel abierto para reintentar
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -838,6 +858,43 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
                   <p className="text-sm text-indigo-700 mt-0.5">{getLinkedIn(detailPerson, "cargo_linkedin") || "—"}</p>
                 </div>
               </div>
+            </div>
+
+            {/* ── Zona peligrosa: borrar contacto ── */}
+            <div className="mt-6 border-t border-red-100 pt-4">
+              {!deleteConfirm ? (
+                <button
+                  onClick={() => setDeleteConfirm(true)}
+                  className="w-full text-sm text-red-500 hover:text-red-700 hover:bg-red-50 border border-red-200 rounded-lg px-3 py-2 transition-colors"
+                >
+                  Eliminar contacto de la BD
+                </button>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-xs text-red-600 font-medium text-center">
+                    ¿Seguro? Esta acción no se puede deshacer
+                  </p>
+                  <p className="text-xs text-gray-500 text-center">
+                    Solo se elimina de nuestra BD, no de Pipedrive.
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setDeleteConfirm(false)}
+                      disabled={deleting}
+                      className="flex-1 text-sm text-gray-600 border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={() => handleDelete(detailPerson.pipedrive_id)}
+                      disabled={deleting}
+                      className="flex-1 text-sm text-white bg-red-500 hover:bg-red-600 rounded-lg px-3 py-1.5 transition-colors disabled:opacity-50"
+                    >
+                      {deleting ? "Eliminando…" : "Sí, eliminar"}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </>
