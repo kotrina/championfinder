@@ -16,7 +16,7 @@ type UserRow = {
 
 export default async function AdminUsersPage() {
   const role = await getUserRole();
-  if (role !== "admin") redirect("/dashboard");
+  if (role !== "admin") redirect("/contacts");
 
   const adminClient = createAdminClient();
 

@@ -51,7 +51,7 @@ export async function updateSession(request: NextRequest) {
   // Con sesión en ruta de auth: redirigir al dashboard
   if (user && isAuthRoute && !pathname.startsWith("/auth/callback")) {
     const url = request.nextUrl.clone();
-    url.pathname = "/dashboard";
+    url.pathname = "/contacts";
     return NextResponse.redirect(url);
   }
 
@@ -65,7 +65,7 @@ export async function updateSession(request: NextRequest) {
 
     if (profile?.role !== "admin") {
       const url = request.nextUrl.clone();
-      url.pathname = "/dashboard";
+      url.pathname = "/contacts";
       return NextResponse.redirect(url);
     }
   }
