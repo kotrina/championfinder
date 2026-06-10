@@ -18,6 +18,7 @@ export type Person = {
   empresa_linkedin: string | null;
   cargo_linkedin: string | null;
   needs_sync: boolean;
+  is_historical: boolean;
 };
 
 type EditableField = "empresa_linkedin" | "cargo_linkedin" | "linkedin_url";
@@ -223,6 +224,7 @@ export function ContactsTable({ initialPeople, syncStatusFilter }: { initialPeop
   // ── Pipedrive sync por fila ───────────────────────────────────────────────
 
   function canSync(p: Person): boolean {
+    if (p.is_historical) return false;
     const empresa = getLinkedIn(p, "empresa_linkedin");
     const cargo = getLinkedIn(p, "cargo_linkedin");
     const linkedin = getLinkedIn(p, "linkedin_url");
@@ -274,17 +276,21 @@ export function ContactsTable({ initialPeople, syncStatusFilter }: { initialPeop
       };
       if (!res.ok || !data.ok) throw new Error(data.error ?? "Error desconocido");
 
+      const isRutaB = body.action === "new_person_existing_org" || body.action === "new_person_new_org";
+
       // Si hay filtro activo de sync, eliminar la fila de la vista (ya no cumple el filtro)
       if (syncStatusFilter === "pending" || syncStatusFilter === "synced" || syncStatusFilter === "no_data") {
         setPeople((prev) => prev.filter((p) => p.pipedrive_id !== personId));
         if (detailPerson?.pipedrive_id === personId) setDetailPerson(null);
       } else {
-        // Sin filtro: solo actualizar needs_sync y campos localmente
+        // Sin filtro: actualizar estado local
         setPeople((prev) => prev.map((p) => {
           if (p.pipedrive_id !== personId) return p;
           return {
             ...p,
             needs_sync: false,
+            // Ruta B: marcar como histórico para que el badge y el botón cambien al instante
+            ...(isRutaB ? { is_historical: true } : {}),
             ...(data.updated?.rol !== null && data.updated?.rol !== undefined ? { rol: data.updated.rol } : {}),
             ...(data.updated?.linkedin_url !== null && data.updated?.linkedin_url !== undefined ? { linkedin_url: data.updated.linkedin_url } : {}),
           };
@@ -452,6 +458,9 @@ export function ContactsTable({ initialPeople, syncStatusFilter }: { initialPeop
                       <div className="flex items-center gap-1.5">
                         {/* Indicador de estado de sync */}
                         {(() => {
+                          if (p.is_historical) return (
+                            <span className="flex-shrink-0 px-1 py-0.5 text-[10px] font-medium rounded bg-gray-100 text-gray-400 leading-none" title="Contacto histórico — empresa anterior">Hist.</span>
+                          );
                           const hasLinkedInData = !!(p.empresa_linkedin || p.cargo_linkedin);
                           if (!hasLinkedInData) return (
                             <span className="flex-shrink-0 w-2 h-2 rounded-full bg-gray-200" title="Sin datos LinkedIn que sincronizar" />
@@ -576,7 +585,9 @@ export function ContactsTable({ initialPeople, syncStatusFilter }: { initialPeop
 
                     {/* Botón Enviar a Pipe */}
                     <td className="px-2 py-2 text-center" onClick={(e) => e.stopPropagation()}>
-                      {(() => {
+                      {p.is_historical ? (
+                        <span className="text-xs text-gray-300 cursor-default" title="Contacto histórico — usa el nuevo perfil para sincronizar">—</span>
+                      ) : (() => {
                         const state = rowSyncState[p.pipedrive_id] ?? "idle";
                         const err = rowSyncError[p.pipedrive_id];
                         if (state === "success") {
