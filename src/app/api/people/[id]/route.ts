@@ -18,7 +18,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     email_linkedin?: string;
   };
 
-  const update: Record<string, string> = {};
+  const update: Record<string, unknown> = {};
   if (typeof body.empresa_linkedin === "string") update.empresa_linkedin = body.empresa_linkedin;
   if (typeof body.cargo_linkedin === "string") update.cargo_linkedin = body.cargo_linkedin;
   if (typeof body.linkedin_url === "string") update.linkedin_url = body.linkedin_url;
@@ -27,6 +27,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (Object.keys(update).length === 0) {
     return NextResponse.json({ error: "Sin campos para actualizar" }, { status: 400 });
   }
+
+  // Editar campos LinkedIn marca el contacto como pendiente de sync
+  const syncFields = ["empresa_linkedin", "cargo_linkedin", "linkedin_url"];
+  if (syncFields.some((f) => f in update)) update.needs_sync = true;
 
   const adminClient = createAdminClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
