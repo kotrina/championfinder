@@ -17,6 +17,7 @@ type SearchParams = {
   status?: string;
   location?: string;
   has_linkedin?: string;
+  sync_status?: string;
   page?: string;
 };
 
@@ -57,6 +58,13 @@ export default async function ContactsPage({
   if (params.location) query = query.ilike("location", `%${params.location}%`);
   if (params.has_linkedin === "1") query = query.not("linkedin_url", "is", null).neq("linkedin_url", "");
 
+  if (params.sync_status === "pending")
+    query = query.eq("needs_sync", true).or("empresa_linkedin.not.is.null,cargo_linkedin.not.is.null");
+  if (params.sync_status === "synced")
+    query = query.eq("needs_sync", false);
+  if (params.sync_status === "no_data")
+    query = query.eq("needs_sync", true).is("empresa_linkedin", null).is("cargo_linkedin", null);
+
   const { data: people, count } = await query
     .order("apellidos", { ascending: true, nullsFirst: false })
     .order("nombre",    { ascending: true, nullsFirst: false })
@@ -87,6 +95,7 @@ export default async function ContactsPage({
     if (params.status) sp.set("status", params.status);
     if (params.location) sp.set("location", params.location);
     if (params.has_linkedin) sp.set("has_linkedin", params.has_linkedin);
+    if (params.sync_status) sp.set("sync_status", params.sync_status);
     sp.set("page", String(p));
     return `/contacts?${sp.toString()}`;
   }
@@ -118,7 +127,7 @@ export default async function ContactsPage({
         {/* Tabla */}
         {!people || people.length === 0 ? (
           <div className="bg-white border border-gray-200 rounded-xl text-center py-16 text-sm text-gray-400">
-            {count === 0 && !params.q && !params.org && !params.rol && !params.status && !params.location && !params.has_linkedin
+            {count === 0 && !params.q && !params.org && !params.rol && !params.status && !params.location && !params.has_linkedin && !params.sync_status
               ? <><Link href="/settings" className="text-blue-600 hover:underline">Sincroniza desde Pipedrive</Link> para ver contactos.</>
               : "No hay resultados para estos filtros."}
           </div>
