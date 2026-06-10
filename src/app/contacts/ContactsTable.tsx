@@ -77,7 +77,7 @@ function LinkedInCell({
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
+export function ContactsTable({ initialPeople, syncStatusFilter }: { initialPeople: Person[]; syncStatusFilter?: string }) {
   const [people, setPeople] = useState<Person[]>(initialPeople);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [hiddenCols, setHiddenCols] = useState<HiddenCols>({
@@ -274,16 +274,22 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
       };
       if (!res.ok || !data.ok) throw new Error(data.error ?? "Error desconocido");
 
-      // Actualizar el estado local de la tabla para reflejar los cambios sin recargar
-      setPeople((prev) => prev.map((p) => {
-        if (p.pipedrive_id !== personId) return p;
-        return {
-          ...p,
-          needs_sync: false,
-          ...(data.updated?.rol !== null && data.updated?.rol !== undefined ? { rol: data.updated.rol } : {}),
-          ...(data.updated?.linkedin_url !== null && data.updated?.linkedin_url !== undefined ? { linkedin_url: data.updated.linkedin_url } : {}),
-        };
-      }));
+      // Si hay filtro activo de sync, eliminar la fila de la vista (ya no cumple el filtro)
+      if (syncStatusFilter === "pending" || syncStatusFilter === "synced" || syncStatusFilter === "no_data") {
+        setPeople((prev) => prev.filter((p) => p.pipedrive_id !== personId));
+        if (detailPerson?.pipedrive_id === personId) setDetailPerson(null);
+      } else {
+        // Sin filtro: solo actualizar needs_sync y campos localmente
+        setPeople((prev) => prev.map((p) => {
+          if (p.pipedrive_id !== personId) return p;
+          return {
+            ...p,
+            needs_sync: false,
+            ...(data.updated?.rol !== null && data.updated?.rol !== undefined ? { rol: data.updated.rol } : {}),
+            ...(data.updated?.linkedin_url !== null && data.updated?.linkedin_url !== undefined ? { linkedin_url: data.updated.linkedin_url } : {}),
+          };
+        }));
+      }
 
       setRowSyncState((prev) => ({ ...prev, [personId]: "success" }));
       setTimeout(() => setRowSyncState((prev) => ({ ...prev, [personId]: "idle" })), 3000);
