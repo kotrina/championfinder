@@ -100,6 +100,7 @@ export type Database = {
           cargo_linkedin: string | null;
           email_linkedin: string | null;
           email_linkedin_status: string | null;
+          needs_sync: boolean;
           synced_at: string | null;
           created_at: string;
         };
@@ -119,6 +120,7 @@ export type Database = {
           cargo_linkedin?: string | null;
           email_linkedin?: string | null;
           email_linkedin_status?: string | null;
+          needs_sync?: boolean;
           synced_at?: string | null;
           created_at?: string;
         };
@@ -137,6 +139,7 @@ export type Database = {
           cargo_linkedin?: string | null;
           email_linkedin?: string | null;
           email_linkedin_status?: string | null;
+          needs_sync?: boolean;
           synced_at?: string | null;
         };
       };

@@ -17,6 +17,7 @@ export type Person = {
   location: string | null;
   empresa_linkedin: string | null;
   cargo_linkedin: string | null;
+  needs_sync: boolean;
 };
 
 type EditableField = "empresa_linkedin" | "cargo_linkedin" | "linkedin_url";
@@ -76,7 +77,7 @@ function LinkedInCell({
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
+export function ContactsTable({ initialPeople, syncStatusFilter }: { initialPeople: Person[]; syncStatusFilter?: string }) {
   const [people, setPeople] = useState<Person[]>(initialPeople);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [hiddenCols, setHiddenCols] = useState<HiddenCols>({
@@ -163,6 +164,10 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
             : { linkedin: value }),
         },
       }));
+      // Marcar visualmente como pendiente si se editó un campo que afecta sync
+      if (["empresa_linkedin", "cargo_linkedin", "linkedin_url"].includes(field)) {
+        setPeople((prev) => prev.map((p) => p.pipedrive_id === id ? { ...p, needs_sync: true } : p));
+      }
       setEditingCell(null);
     } catch {
       // keep editing open on error
@@ -269,14 +274,19 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
       };
       if (!res.ok || !data.ok) throw new Error(data.error ?? "Error desconocido");
 
-      // Actualizar el estado local de la tabla para reflejar los cambios sin recargar
-      if (data.updated) {
+      // Si hay filtro activo de sync, eliminar la fila de la vista (ya no cumple el filtro)
+      if (syncStatusFilter === "pending" || syncStatusFilter === "synced" || syncStatusFilter === "no_data") {
+        setPeople((prev) => prev.filter((p) => p.pipedrive_id !== personId));
+        if (detailPerson?.pipedrive_id === personId) setDetailPerson(null);
+      } else {
+        // Sin filtro: solo actualizar needs_sync y campos localmente
         setPeople((prev) => prev.map((p) => {
           if (p.pipedrive_id !== personId) return p;
           return {
             ...p,
-            ...(data.updated!.rol !== null ? { rol: data.updated!.rol } : {}),
-            ...(data.updated!.linkedin_url !== null ? { linkedin_url: data.updated!.linkedin_url } : {}),
+            needs_sync: false,
+            ...(data.updated?.rol !== null && data.updated?.rol !== undefined ? { rol: data.updated.rol } : {}),
+            ...(data.updated?.linkedin_url !== null && data.updated?.linkedin_url !== undefined ? { linkedin_url: data.updated.linkedin_url } : {}),
           };
         }));
       }
@@ -438,17 +448,32 @@ export function ContactsTable({ initialPeople }: { initialPeople: Person[] }) {
                       <td className="px-3 py-2 text-gray-400 font-mono text-xs cursor-pointer"
                         onClick={() => setDetailPerson(p)}>{p.pipedrive_id}</td>
                     )}
-                    <td className="px-3 py-2 max-w-[110px]">
-                      <a
-                        href={`https://${process.env.NEXT_PUBLIC_PIPEDRIVE_DOMAIN ?? "app"}.pipedrive.com/person/${p.pipedrive_id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="font-medium text-blue-600 hover:underline text-sm truncate block"
-                        title="Ver en Pipedrive"
-                      >
-                        {[p.nombre, p.apellidos].filter(Boolean).join(" ") || "—"}
-                      </a>
+                    <td className="px-3 py-2 max-w-[120px]">
+                      <div className="flex items-center gap-1.5">
+                        {/* Indicador de estado de sync */}
+                        {(() => {
+                          const hasLinkedInData = !!(p.empresa_linkedin || p.cargo_linkedin);
+                          if (!hasLinkedInData) return (
+                            <span className="flex-shrink-0 w-2 h-2 rounded-full bg-gray-200" title="Sin datos LinkedIn que sincronizar" />
+                          );
+                          if (p.needs_sync) return (
+                            <span className="flex-shrink-0 w-2 h-2 rounded-full bg-amber-400" title="Pendiente de enviar a Pipedrive" />
+                          );
+                          return (
+                            <span className="flex-shrink-0 w-2 h-2 rounded-full bg-green-400" title="Sincronizado con Pipedrive" />
+                          );
+                        })()}
+                        <a
+                          href={`https://${process.env.NEXT_PUBLIC_PIPEDRIVE_DOMAIN ?? "app"}.pipedrive.com/person/${p.pipedrive_id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="font-medium text-blue-600 hover:underline text-sm truncate block"
+                          title="Ver en Pipedrive"
+                        >
+                          {[p.nombre, p.apellidos].filter(Boolean).join(" ") || "—"}
+                        </a>
+                      </div>
                     </td>
                     <td className="px-3 py-2 text-gray-600 text-xs truncate max-w-[140px] cursor-pointer"
                       onClick={() => setDetailPerson(p)}>{p.email ?? "—"}</td>
