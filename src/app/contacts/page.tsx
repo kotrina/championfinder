@@ -41,7 +41,7 @@ export default async function ContactsPage({
   let query = (supabase as any)
     .from("people")
     .select(
-      "pipedrive_id, nombre, apellidos, email, organizacion, marketing_status, rol, linkedin_url, won_deals, total_activities, location, empresa_linkedin, cargo_linkedin, needs_sync",
+      "pipedrive_id, nombre, apellidos, email, organizacion, marketing_status, rol, linkedin_url, won_deals, total_activities, location, empresa_linkedin, cargo_linkedin, needs_sync, is_historical",
       { count: "exact" }
     );
 
@@ -57,6 +57,14 @@ export default async function ContactsPage({
   if (params.status) query = query.eq("marketing_status", params.status);
   if (params.location) query = query.ilike("location", `%${params.location}%`);
   if (params.has_linkedin === "1") query = query.not("linkedin_url", "is", null).neq("linkedin_url", "");
+
+  // Históricos: mostrar SOLO los históricos cuando se pide explícitamente;
+  // en cualquier otro caso (Todos + resto de filtros de estado) excluirlos.
+  if (params.sync_status === "historical") {
+    query = query.eq("is_historical", true);
+  } else {
+    query = query.or("is_historical.is.null,is_historical.eq.false");
+  }
 
   if (params.sync_status === "pending")
     query = query.eq("needs_sync", true).or("empresa_linkedin.not.is.null,cargo_linkedin.not.is.null");

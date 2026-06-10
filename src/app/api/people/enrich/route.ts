@@ -26,9 +26,9 @@ export async function POST(req: Request) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: people } = await (supabase as any)
     .from("people")
-    .select("pipedrive_id, linkedin_url")
+    .select("pipedrive_id, linkedin_url, is_historical")
     .in("pipedrive_id", ids) as {
-      data: { pipedrive_id: number; linkedin_url: string | null }[] | null;
+      data: { pipedrive_id: number; linkedin_url: string | null; is_historical: boolean }[] | null;
     };
 
   if (!people || people.length === 0) {
@@ -39,6 +39,10 @@ export async function POST(req: Request) {
   const results: EnrichResult[] = [];
 
   for (const person of people) {
+    if (person.is_historical) {
+      results.push({ pipedrive_id: person.pipedrive_id, ok: false, error: "Contacto histórico — no se enriquece" });
+      continue;
+    }
     if (!person.linkedin_url) {
       results.push({ pipedrive_id: person.pipedrive_id, ok: false, error: "Sin URL de LinkedIn" });
       continue;

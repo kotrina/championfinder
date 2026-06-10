@@ -99,10 +99,11 @@ export function ContactsFilters({ roles, statuses }: Props) {
         onChange={(e) => update("sync_status", e.target.value)}
         className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
       >
-        <option value="">Todos (sync)</option>
+        <option value="">Todos los activos</option>
         <option value="pending">🟡 Pendientes de enviar</option>
         <option value="synced">🟢 Sincronizados</option>
         <option value="no_data">⚫ Sin datos LinkedIn</option>
+        <option value="historical">🏷️ Históricos</option>
       </select>
     </div>
   );

@@ -65,29 +65,29 @@ export default async function Home() {
               },
               {
                 n: "2",
-                title: "Revisa los contactos",
-                desc: "En la sección Contactos encontrarás todos los perfiles importados. Usa los filtros para localizar los que necesitas trabajar.",
+                title: "Revisa y filtra los contactos",
+                desc: "En Contactos verás todos los perfiles activos ordenados alfabéticamente. Usa los filtros para localizar lo que necesitas: busca por nombre, empresa, rol, ubicación, filtra «Con LinkedIn» o por estado de sync (🟡 Pendientes / 🟢 Sincronizados). Los contactos históricos están ocultos por defecto — usa el filtro «🏷️ Históricos» si necesitas consultarlos.",
                 href: "/contacts",
                 color: "text-blue-600 bg-blue-50 border-blue-100",
               },
               {
                 n: "3",
                 title: "Enriquece con LinkedIn Scraping",
-                desc: "Selecciona los contactos que tengan URL de LinkedIn y pulsa «LinkedIn Scraping». La herramienta consultará cada perfil y rellenará automáticamente Empresa LinkedIn y Cargo LinkedIn.",
+                desc: "Selecciona contactos con URL de LinkedIn y pulsa «LinkedIn Scraping». Se rellena automáticamente Empresa LinkedIn y Cargo LinkedIn. Los contactos históricos se omiten automáticamente para no contaminar datos anteriores.",
                 href: "/contacts",
                 color: "text-indigo-600 bg-indigo-50 border-indigo-100",
               },
               {
                 n: "4",
                 title: "Fusiona roles duplicados",
-                desc: "En la sección Roles puedes agrupar variantes del mismo rol (ej. «Dev», «Developer», «Desarrollador») en una etiqueta canónica que se actualiza en Pipedrive.",
+                desc: "En Roles puedes agrupar variantes del mismo rol (ej. «Dev», «Developer», «Desarrollador») en una etiqueta canónica que se actualiza en Pipedrive.",
                 href: "/roles",
                 color: "text-purple-600 bg-purple-50 border-purple-100",
               },
               {
                 n: "5",
                 title: "Envía los cambios a Pipedrive",
-                desc: "Usa el botón «→ Pipe» en cada fila para sincronizar los datos enriquecidos. La herramienta elige automáticamente Ruta A o Ruta B según si el contacto ha cambiado de empresa.",
+                desc: "Usa el botón «→ Pipe» en cada fila para sincronizar. El punto de color indica el estado: 🟡 pendiente de enviar, 🟢 ya sincronizado, ⚫ sin datos LinkedIn. Filtra por «Pendientes» para localizar rápidamente los que necesitan sync. La herramienta elige Ruta A o Ruta B automáticamente.",
                 href: "/contacts",
                 color: "text-green-600 bg-green-50 border-green-100",
               },
@@ -127,7 +127,7 @@ export default async function Home() {
               <ul className="text-xs text-gray-500 space-y-1 mt-2">
                 <li className="flex gap-1.5"><span className="text-green-500 mt-0.5">✓</span> Actualiza ROL en Pipedrive</li>
                 <li className="flex gap-1.5"><span className="text-green-500 mt-0.5">✓</span> Actualiza LinkedIn URL en Pipedrive</li>
-                <li className="flex gap-1.5"><span className="text-green-500 mt-0.5">✓</span> Actualiza la base de datos local</li>
+                <li className="flex gap-1.5"><span className="text-green-500 mt-0.5">✓</span> Marca el contacto como 🟢 sincronizado</li>
               </ul>
             </div>
             <div className="px-6 py-5 space-y-2">
@@ -136,16 +136,40 @@ export default async function Home() {
                 <span className="text-sm font-medium text-gray-800">Empresa diferente</span>
               </div>
               <p className="text-xs text-gray-500 leading-relaxed">
-                La Empresa LinkedIn es distinta a la organización actual. Se crea un <strong>nuevo contacto</strong> en Pipedrive vinculado a la nueva empresa, con label <strong>REVISAR</strong>. El original no se modifica.
+                La Empresa LinkedIn es distinta a la organización actual. Se crea un <strong>nuevo contacto</strong> en Pipedrive vinculado a la nueva empresa, con label <strong>REVISAR</strong>. El contacto original se marca como <strong>Histórico</strong> para preservar su integridad.
               </p>
               <ul className="text-xs text-gray-500 space-y-1 mt-2">
                 <li className="flex gap-1.5"><span className="text-orange-500 mt-0.5">✓</span> Crea nuevo contacto con label REVISAR</li>
                 <li className="flex gap-1.5"><span className="text-orange-500 mt-0.5">✓</span> Crea nueva empresa si no existe (label REVISAR)</li>
                 <li className="flex gap-1.5"><span className="text-orange-500 mt-0.5">✓</span> Guarda Previous Company y Previous Profile en el nuevo contacto</li>
-                <li className="flex gap-1.5"><span className="text-orange-500 mt-0.5">✓</span> El contacto original queda intacto</li>
+                <li className="flex gap-1.5"><span className="text-orange-500 mt-0.5">✓</span> El original queda como «Hist.» — ya no se enriquece ni sincroniza</li>
               </ul>
             </div>
           </div>
+        </div>
+
+        {/* Indicadores visuales */}
+        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
+            <h2 className="font-semibold text-gray-800">Indicadores visuales en la tabla</h2>
+            <p className="text-xs text-gray-400 mt-0.5">Cada fila muestra un indicador junto al nombre para conocer el estado de un vistazo.</p>
+          </div>
+          <ul className="divide-y divide-gray-50">
+            {[
+              { icon: "🟡", label: "Pendiente", desc: "Tiene datos de LinkedIn (empresa o cargo) que aún no se han enviado a Pipedrive." },
+              { icon: "🟢", label: "Sincronizado", desc: "Los datos están al día en Pipedrive. Último envío posterior a cualquier cambio." },
+              { icon: "⚫", label: "Sin datos", desc: "No tiene empresa ni cargo LinkedIn — nada relevante que sincronizar todavía." },
+              { icon: "🏷️", label: "Hist.", desc: "Contacto histórico (empresa anterior). Oculto por defecto. Usa el filtro «🏷️ Históricos» para consultarlos. Ya no se enriquece ni se sincroniza." },
+            ].map(({ icon, label, desc }) => (
+              <li key={label} className="flex items-start gap-3 px-6 py-3">
+                <span className="text-base mt-0.5 w-5 text-center flex-shrink-0">{icon}</span>
+                <div>
+                  <span className="text-xs font-semibold text-gray-700">{label} </span>
+                  <span className="text-xs text-gray-500">{desc}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
 
       </main>

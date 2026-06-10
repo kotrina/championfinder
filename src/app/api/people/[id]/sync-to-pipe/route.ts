@@ -155,6 +155,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     console.error("[sync-to-pipe Ruta B] Error actualizando campos Previous en original:", previousResult.error);
   }
 
+  // Marcar el contacto original como histórico — ya no debe enriquecerse ni sincronizarse
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (adminClient as any)
+    .from("people")
+    .update({ is_historical: true, needs_sync: false })
+    .eq("pipedrive_id", pipedriveId);
+
   return NextResponse.json({
     ok: true,
     action: body.action,
