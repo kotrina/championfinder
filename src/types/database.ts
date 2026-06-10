@@ -101,6 +101,7 @@ export type Database = {
           email_linkedin: string | null;
           email_linkedin_status: string | null;
           needs_sync: boolean;
+          is_historical: boolean;
           synced_at: string | null;
           created_at: string;
         };
@@ -121,6 +122,7 @@ export type Database = {
           email_linkedin?: string | null;
           email_linkedin_status?: string | null;
           needs_sync?: boolean;
+          is_historical?: boolean;
           synced_at?: string | null;
           created_at?: string;
         };
@@ -140,6 +142,7 @@ export type Database = {
           email_linkedin?: string | null;
           email_linkedin_status?: string | null;
           needs_sync?: boolean;
+          is_historical?: boolean;
           synced_at?: string | null;
         };
       };
