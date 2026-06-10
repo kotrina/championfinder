@@ -55,8 +55,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     });
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: 502 });
 
-    // Actualizar BD local: rol, linkedin_url y timestamp de sync
-    const dbUpdate: Record<string, unknown> = { synced_at: new Date().toISOString() };
+    // Actualizar BD local: rol, linkedin_url, needs_sync y timestamp de sync
+    const dbUpdate: Record<string, unknown> = { synced_at: new Date().toISOString(), needs_sync: false };
     if (person.cargo_linkedin !== null) dbUpdate.rol = person.cargo_linkedin;
     if (person.linkedin_url !== null) dbUpdate.linkedin_url = person.linkedin_url;
 
@@ -129,6 +129,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     cargo_linkedin: person.cargo_linkedin,
     won_deals: 0,
     total_activities: 0,
+    needs_sync: false,
     synced_at: new Date().toISOString(),
   });
 

@@ -55,6 +55,7 @@ export async function POST(req: Request) {
         .update({
           empresa_linkedin: lookup.currentCompany,
           cargo_linkedin: lookup.currentTitle,
+          needs_sync: true,
         })
         .eq("pipedrive_id", person.pipedrive_id);
 
