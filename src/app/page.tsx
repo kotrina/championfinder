@@ -73,7 +73,7 @@ export default async function Home() {
               {
                 n: "3",
                 title: "Enriquece con LinkedIn Scraping",
-                desc: "Selecciona contactos con URL de LinkedIn y pulsa «LinkedIn Scraping». Se rellena automáticamente Empresa LinkedIn y Cargo LinkedIn. Los contactos históricos se omiten automáticamente para no contaminar datos anteriores.",
+                desc: "Selecciona contactos con URL de LinkedIn y pulsa «LinkedIn Scraping». Se rellena automáticamente Empresa LinkedIn y Cargo LinkedIn. Si el perfil no se encuentra o la API falla, la fila muestra ❌ junto al nombre. Usa el filtro «❌ Scraping fallido» para localizarlos y reintentar. Los históricos se omiten automáticamente.",
                 href: "/contacts",
                 color: "text-indigo-600 bg-indigo-50 border-indigo-100",
               },
@@ -160,6 +160,7 @@ export default async function Home() {
               { icon: "🟢", label: "Sincronizado", desc: "Los datos están al día en Pipedrive. Último envío posterior a cualquier cambio." },
               { icon: "⚫", label: "Sin datos", desc: "No tiene empresa ni cargo LinkedIn — nada relevante que sincronizar todavía." },
               { icon: "🏷️", label: "Hist.", desc: "Contacto histórico (empresa anterior). Oculto por defecto. Usa el filtro «🏷️ Históricos» para consultarlos. Ya no se enriquece ni se sincroniza." },
+              { icon: "❌", label: "Scraping fallido", desc: "El último intento de LinkedIn Scraping no encontró el perfil o la API devolvió un error. Usa el filtro «❌ Scraping fallido» para localizarlos y reintentar." },
             ].map(({ icon, label, desc }) => (
               <li key={label} className="flex items-start gap-3 px-6 py-3">
                 <span className="text-base mt-0.5 w-5 text-center flex-shrink-0">{icon}</span>
