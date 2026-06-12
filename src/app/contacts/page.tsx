@@ -18,6 +18,7 @@ type SearchParams = {
   location?: string;
   has_linkedin?: string;
   sync_status?: string;
+  scrape_filter?: string;
   page?: string;
 };
 
@@ -41,7 +42,7 @@ export default async function ContactsPage({
   let query = (supabase as any)
     .from("people")
     .select(
-      "pipedrive_id, nombre, apellidos, email, organizacion, marketing_status, rol, linkedin_url, won_deals, total_activities, location, empresa_linkedin, cargo_linkedin, needs_sync, is_historical",
+      "pipedrive_id, nombre, apellidos, email, organizacion, marketing_status, rol, linkedin_url, won_deals, total_activities, location, empresa_linkedin, cargo_linkedin, needs_sync, is_historical, scrape_status",
       { count: "exact" }
     );
 
@@ -72,6 +73,9 @@ export default async function ContactsPage({
     query = query.eq("needs_sync", false);
   if (params.sync_status === "no_data")
     query = query.eq("needs_sync", true).is("empresa_linkedin", null).is("cargo_linkedin", null);
+
+  if (params.scrape_filter === "failed")
+    query = query.eq("scrape_status", "failed");
 
   const { data: people, count } = await query
     .order("apellidos", { ascending: true, nullsFirst: false })
@@ -104,6 +108,7 @@ export default async function ContactsPage({
     if (params.location) sp.set("location", params.location);
     if (params.has_linkedin) sp.set("has_linkedin", params.has_linkedin);
     if (params.sync_status) sp.set("sync_status", params.sync_status);
+    if (params.scrape_filter) sp.set("scrape_filter", params.scrape_filter);
     sp.set("page", String(p));
     return `/contacts?${sp.toString()}`;
   }
@@ -135,7 +140,7 @@ export default async function ContactsPage({
         {/* Tabla */}
         {!people || people.length === 0 ? (
           <div className="bg-white border border-gray-200 rounded-xl text-center py-16 text-sm text-gray-400">
-            {count === 0 && !params.q && !params.org && !params.rol && !params.status && !params.location && !params.has_linkedin && !params.sync_status
+            {count === 0 && !params.q && !params.org && !params.rol && !params.status && !params.location && !params.has_linkedin && !params.sync_status && !params.scrape_filter
               ? <><Link href="/settings" className="text-blue-600 hover:underline">Sincroniza desde Pipedrive</Link> para ver contactos.</>
               : "No hay resultados para estos filtros."}
           </div>
