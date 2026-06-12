@@ -142,6 +142,7 @@ export default async function Home() {
                 <li className="flex gap-1.5"><span className="text-orange-500 mt-0.5">✓</span> Crea nuevo contacto con label REVISAR</li>
                 <li className="flex gap-1.5"><span className="text-orange-500 mt-0.5">✓</span> Crea nueva empresa si no existe (label REVISAR)</li>
                 <li className="flex gap-1.5"><span className="text-orange-500 mt-0.5">✓</span> Guarda Previous Company y Previous Profile en el nuevo contacto</li>
+                <li className="flex gap-1.5"><span className="text-orange-500 mt-0.5">✓</span> Añade una nota con el tiempo en la empresa: «En Acme desde marzo 2022 (3 años y 2 meses)»</li>
                 <li className="flex gap-1.5"><span className="text-orange-500 mt-0.5">✓</span> El original queda como «Hist.» — ya no se enriquece ni sincroniza</li>
               </ul>
             </div>

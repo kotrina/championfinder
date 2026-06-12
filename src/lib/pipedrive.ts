@@ -139,6 +139,17 @@ export async function createPersonInPipedrive(data: CreatePersonData): Promise<{
   return { ok: true, id: (r.data as { id: number }).id };
 }
 
+// ── addNoteToPersonInPipedrive ────────────────────────────────────────────────
+
+export async function addNoteToPersonInPipedrive(personId: number, content: string): Promise<PipedriveResult> {
+  const r = await pdFetch("notes", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content, person_id: personId }),
+  });
+  return r.ok ? { ok: true } : { ok: false, error: r.error ?? `HTTP ${r.status}` };
+}
+
 // ── lookupLinkedInProfile (EnrichLayer) ──────────────────────────────────────
 
 type EnrichLayerExperience = {
