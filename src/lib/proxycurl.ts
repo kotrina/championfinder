@@ -12,7 +12,7 @@ type EnrichLayerProfile = {
 };
 
 export type LookupResult =
-  | { ok: true; currentCompany: string | null; currentTitle: string | null }
+  | { ok: true; currentCompany: string | null; currentTitle: string | null; currentStartDate: string | null }
   | { ok: false; error: string };
 
 export async function lookupLinkedInProfile(linkedinUrl: string): Promise<LookupResult> {
@@ -70,7 +70,13 @@ export async function lookupLinkedInProfile(linkedinUrl: string): Promise<Lookup
   const currentCompany = currentExperience?.company ?? null;
   const currentTitle = currentExperience?.title ?? null;
 
-  return { ok: true, currentCompany, currentTitle };
+  let currentStartDate: string | null = null;
+  if (currentExperience?.starts_at?.year) {
+    const { year, month } = currentExperience.starts_at;
+    currentStartDate = month ? `${year}-${String(month).padStart(2, "0")}` : `${year}`;
+  }
+
+  return { ok: true, currentCompany, currentTitle, currentStartDate };
 }
 
 export function companiesMatch(a: string, b: string | null): boolean {

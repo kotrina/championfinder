@@ -6,6 +6,7 @@ import {
   updatePersonPreviousFields,
   createOrganization,
   createPersonInPipedrive,
+  addNoteToPersonInPipedrive,
 } from "@/lib/pipedrive";
 
 type SyncBody =
@@ -29,7 +30,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: person } = await (adminClient as any)
     .from("people")
-    .select("pipedrive_id, nombre, apellidos, organizacion, rol, linkedin_url, empresa_linkedin, cargo_linkedin, email_linkedin")
+    .select("pipedrive_id, nombre, apellidos, organizacion, rol, linkedin_url, empresa_linkedin, cargo_linkedin, email_linkedin, cargo_desde")
     .eq("pipedrive_id", pipedriveId)
     .single() as {
       data: {
@@ -42,6 +43,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         empresa_linkedin: string | null;
         cargo_linkedin: string | null;
         email_linkedin: string | null;
+        cargo_desde: string | null;
       } | null;
     };
 
@@ -162,12 +164,46 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     .update({ is_historical: true, needs_sync: false })
     .eq("pipedrive_id", pipedriveId);
 
+  // Añadir nota con tiempo en empresa si tenemos la fecha de inicio
+  let noteAdded = false;
+  if (person.cargo_desde && person.empresa_linkedin) {
+    const noteContent = buildTenureNote(person.cargo_desde, person.empresa_linkedin);
+    const noteResult = await addNoteToPersonInPipedrive(newPipedriveId, noteContent);
+    noteAdded = noteResult.ok;
+    if (!noteResult.ok) console.error("[sync-to-pipe Ruta B] Error creando nota:", noteResult.error);
+  }
+
   return NextResponse.json({
     ok: true,
     action: body.action,
     newPipedriveId,
     orgId,
     previousFieldsUpdated: previousResult.ok,
+    noteAdded,
     ...(previousResult.ok ? {} : { previousFieldsError: previousResult.error }),
   });
+}
+
+function buildTenureNote(cargoDesde: string, empresa: string): string {
+  const MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+  const parts = cargoDesde.split("-");
+  const year = parseInt(parts[0], 10);
+  const month = parts[1] ? parseInt(parts[1], 10) : null;
+
+  const now = new Date();
+  let duracion: string;
+
+  if (month) {
+    const totalMeses = (now.getFullYear() - year) * 12 + (now.getMonth() + 1 - month);
+    const años = Math.floor(totalMeses / 12);
+    const meses = totalMeses % 12;
+    if (años === 0) duracion = `${meses} ${meses === 1 ? "mes" : "meses"}`;
+    else if (meses === 0) duracion = `${años} ${años === 1 ? "año" : "años"}`;
+    else duracion = `${años} ${años === 1 ? "año" : "años"} y ${meses} ${meses === 1 ? "mes" : "meses"}`;
+    return `En ${empresa} desde ${MESES[month - 1]} ${year} (${duracion})`;
+  } else {
+    const años = now.getFullYear() - year;
+    duracion = años <= 1 ? "aprox. 1 año" : `aprox. ${años} años`;
+    return `En ${empresa} desde ${year} (${duracion})`;
+  }
 }
