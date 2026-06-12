@@ -65,6 +65,7 @@ export async function POST(req: Request) {
         .update({
           empresa_linkedin: lookup.currentCompany,
           cargo_linkedin: lookup.currentTitle,
+          cargo_desde: lookup.currentStartDate,
           needs_sync: true,
           scrape_status: "ok",
         })
