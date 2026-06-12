@@ -19,6 +19,7 @@ export type Person = {
   cargo_linkedin: string | null;
   needs_sync: boolean;
   is_historical: boolean;
+  scrape_status: string | null;
 };
 
 type EditableField = "empresa_linkedin" | "cargo_linkedin" | "linkedin_url";
@@ -212,6 +213,12 @@ export function ContactsTable({ initialPeople, syncStatusFilter }: { initialPeop
         }
         return next;
       });
+      // Actualizar scrape_status localmente
+      setPeople((prev) => prev.map((p) => {
+        const r = (data.results ?? []).find((x) => x.pipedrive_id === p.pipedrive_id);
+        if (!r) return p;
+        return { ...p, scrape_status: r.ok ? "ok" : "failed", ...(r.ok ? { needs_sync: true } : {}) };
+      }));
       setEnrichDone({ success: data.successCount ?? 0, errors: data.errorCount ?? 0 });
       setSelected(new Set());
     } catch {
@@ -472,6 +479,10 @@ export function ContactsTable({ initialPeople, syncStatusFilter }: { initialPeop
                             <span className="flex-shrink-0 w-2 h-2 rounded-full bg-green-400" title="Sincronizado con Pipedrive" />
                           );
                         })()}
+                        {/* Indicador de scraping fallido */}
+                        {p.scrape_status === "failed" && (
+                          <span className="flex-shrink-0 text-[11px] leading-none" title="Último scraping LinkedIn falló — perfil no encontrado o error de API">❌</span>
+                        )}
                         <a
                           href={`https://${process.env.NEXT_PUBLIC_PIPEDRIVE_DOMAIN ?? "app"}.pipedrive.com/person/${p.pipedrive_id}`}
                           target="_blank"

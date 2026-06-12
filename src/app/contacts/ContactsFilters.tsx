@@ -93,6 +93,17 @@ export function ContactsFilters({ roles, statuses }: Props) {
         <span className="text-gray-700">Con LinkedIn</span>
       </label>
 
+      {/* Solo scraping fallido */}
+      <label className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white cursor-pointer hover:border-red-400 transition-colors select-none">
+        <input
+          type="checkbox"
+          checked={searchParams.get("scrape_filter") === "failed"}
+          onChange={(e) => update("scrape_filter", e.target.checked ? "failed" : "")}
+          className="rounded border-gray-300 text-red-600 focus:ring-red-500"
+        />
+        <span className="text-gray-700">❌ Scraping fallido</span>
+      </label>
+
       {/* Estado de sincronización */}
       <select
         value={searchParams.get("sync_status") ?? ""}

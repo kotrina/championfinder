@@ -51,6 +51,12 @@ export async function POST(req: Request) {
     const lookup = await lookupLinkedInProfile(person.linkedin_url);
 
     if (!lookup.ok) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (adminClient as any)
+        .from("people")
+        .update({ scrape_status: "failed" })
+        .eq("pipedrive_id", person.pipedrive_id);
+
       results.push({ pipedrive_id: person.pipedrive_id, ok: false, error: lookup.error });
     } else {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -61,6 +67,7 @@ export async function POST(req: Request) {
           cargo_linkedin: lookup.currentTitle,
           cargo_desde: lookup.currentStartDate,
           needs_sync: true,
+          scrape_status: "ok",
         })
         .eq("pipedrive_id", person.pipedrive_id);
 

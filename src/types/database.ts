@@ -103,6 +103,7 @@ export type Database = {
           needs_sync: boolean;
           is_historical: boolean;
           cargo_desde: string | null;
+          scrape_status: string | null;
           synced_at: string | null;
           created_at: string;
         };
@@ -125,6 +126,7 @@ export type Database = {
           needs_sync?: boolean;
           is_historical?: boolean;
           cargo_desde?: string | null;
+          scrape_status?: string | null;
           synced_at?: string | null;
           created_at?: string;
         };
@@ -146,6 +148,7 @@ export type Database = {
           needs_sync?: boolean;
           is_historical?: boolean;
           cargo_desde?: string | null;
+          scrape_status?: string | null;
           synced_at?: string | null;
         };
       };
