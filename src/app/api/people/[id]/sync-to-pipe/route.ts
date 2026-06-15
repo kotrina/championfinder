@@ -168,9 +168,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   let noteAdded = false;
   if (person.cargo_desde && person.empresa_linkedin) {
     const noteContent = buildTenureNote(person.cargo_desde, person.empresa_linkedin);
+    console.log("[sync-to-pipe Ruta B] Creando nota:", noteContent);
     const noteResult = await addNoteToPersonInPipedrive(newPipedriveId, noteContent);
     noteAdded = noteResult.ok;
     if (!noteResult.ok) console.error("[sync-to-pipe Ruta B] Error creando nota:", noteResult.error);
+  } else {
+    console.log("[sync-to-pipe Ruta B] Sin nota — cargo_desde:", person.cargo_desde, "empresa_linkedin:", person.empresa_linkedin);
   }
 
   return NextResponse.json({

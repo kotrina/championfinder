@@ -87,7 +87,7 @@ export default async function Home() {
               {
                 n: "5",
                 title: "Envía los cambios a Pipedrive",
-                desc: "Usa el botón «→ Pipe» en cada fila para sincronizar. El punto de color indica el estado: 🟡 pendiente de enviar, 🟢 ya sincronizado, ⚫ sin datos LinkedIn. Filtra por «Pendientes» para localizar rápidamente los que necesitan sync. La herramienta elige Ruta A o Ruta B automáticamente.",
+                desc: "Usa el menú ··· en cada fila para ver las acciones disponibles: «→ Enviar a Pipedrive» sincroniza el contacto (la herramienta elige Ruta A o Ruta B automáticamente) y «🏷️ Marcar como histórico» lo marca directamente sin sincronizar. El punto de color indica el estado: 🟡 pendiente, 🟢 sincronizado, ⚫ sin datos.",
                 href: "/contacts",
                 color: "text-green-600 bg-green-50 border-green-100",
               },
@@ -113,7 +113,7 @@ export default async function Home() {
         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
             <h2 className="font-semibold text-gray-800">Ruta A y Ruta B al enviar a Pipedrive</h2>
-            <p className="text-xs text-gray-400 mt-0.5">Cuando pulsas «→ Pipe», la herramienta decide qué acción tomar según la situación del contacto.</p>
+            <p className="text-xs text-gray-400 mt-0.5">Cuando pulsas «→ Enviar a Pipedrive» en el menú ···, la herramienta decide qué acción tomar según la situación del contacto.</p>
           </div>
           <div className="grid sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
             <div className="px-6 py-5 space-y-2">
