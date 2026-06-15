@@ -16,6 +16,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     cargo_linkedin?: string;
     linkedin_url?: string;
     email_linkedin?: string;
+    is_historical?: boolean;
   };
 
   const update: Record<string, unknown> = {};
@@ -23,6 +24,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (typeof body.cargo_linkedin === "string") update.cargo_linkedin = body.cargo_linkedin;
   if (typeof body.linkedin_url === "string") update.linkedin_url = body.linkedin_url;
   if (typeof body.email_linkedin === "string") update.email_linkedin = body.email_linkedin;
+  if (typeof body.is_historical === "boolean") {
+    update.is_historical = body.is_historical;
+    if (body.is_historical) update.needs_sync = false;
+  }
 
   if (Object.keys(update).length === 0) {
     return NextResponse.json({ error: "Sin campos para actualizar" }, { status: 400 });

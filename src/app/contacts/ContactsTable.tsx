@@ -100,6 +100,8 @@ export function ContactsTable({ initialPeople, syncStatusFilter }: { initialPeop
   // Delete contact
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  // 3-dot action menu
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
 
   // Sincronizar con nuevos datos del servidor (paginación, filtros)
   useEffect(() => {
@@ -110,6 +112,7 @@ export function ContactsTable({ initialPeople, syncStatusFilter }: { initialPeop
     setEnrichDone(null);
     setRowSyncState({});
     setRowSyncError({});
+    setOpenMenuId(null);
   }, [initialPeople]);
 
   // ── Helpers ────────────────────────────────────────────────────────────────
@@ -329,6 +332,30 @@ export function ContactsTable({ initialPeople, syncStatusFilter }: { initialPeop
     }
   }
 
+  // ── Marcar como histórico ────────────────────────────────────────────────
+
+  async function handleMarkHistorical(personId: number) {
+    setOpenMenuId(null);
+    try {
+      const res = await fetch(`/api/people/${personId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_historical: true }),
+      });
+      if (!res.ok) throw new Error();
+      if (syncStatusFilter) {
+        setPeople((prev) => prev.filter((p) => p.pipedrive_id !== personId));
+        if (detailPerson?.pipedrive_id === personId) setDetailPerson(null);
+      } else {
+        setPeople((prev) => prev.map((p) =>
+          p.pipedrive_id === personId ? { ...p, is_historical: true, needs_sync: false } : p
+        ));
+      }
+    } catch {
+      // silent — user can retry by reopening the menu
+    }
+  }
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
@@ -412,7 +439,7 @@ export function ContactsTable({ initialPeople, syncStatusFilter }: { initialPeop
           </div>
         </div>
 
-        <div className="overflow-x-auto" onClick={() => setShowColMenu(false)}>
+        <div className="overflow-x-auto" onClick={() => { setShowColMenu(false); setOpenMenuId(null); }}>
           <table className="w-full text-sm">
             <thead className="border-b border-gray-100 bg-gray-50">
               <tr>
@@ -594,34 +621,53 @@ export function ContactsTable({ initialPeople, syncStatusFilter }: { initialPeop
                       />
                     </td>
 
-                    {/* Botón Enviar a Pipe */}
+                    {/* Menú de acciones (3 puntos) */}
                     <td className="px-2 py-2 text-center" onClick={(e) => e.stopPropagation()}>
-                      {p.is_historical ? (
-                        <span className="text-xs text-gray-300 cursor-default" title="Contacto histórico — usa el nuevo perfil para sincronizar">—</span>
-                      ) : (() => {
+                      {(() => {
                         const state = rowSyncState[p.pipedrive_id] ?? "idle";
                         const err = rowSyncError[p.pipedrive_id];
                         if (state === "success") {
                           return <span className="text-xs text-green-600 font-medium">✓ Enviado</span>;
                         }
                         if (state === "error") {
-                          return (
-                            <span className="text-xs text-red-500 cursor-help" title={err}>✗ Error</span>
-                          );
+                          return <span className="text-xs text-red-500 cursor-help" title={err}>✗ Error</span>;
+                        }
+                        if (state === "searching" || state === "syncing") {
+                          return <span className="text-xs text-gray-400">…</span>;
                         }
                         return (
-                          <button
-                            onClick={() => handleSyncClick(p)}
-                            disabled={!canSync(p) || state === "searching" || state === "syncing"}
-                            title="Enviar a Pipedrive"
-                            className={`px-2 py-1 text-xs rounded-md border transition-colors whitespace-nowrap ${
-                              canSync(p)
-                                ? "border-orange-300 text-orange-600 hover:bg-orange-50"
-                                : "border-gray-200 text-gray-300 cursor-not-allowed"
-                            } disabled:opacity-60`}
-                          >
-                            {state === "searching" || state === "syncing" ? "…" : "→ Pipe"}
-                          </button>
+                          <div className="relative flex justify-center">
+                            <button
+                              onClick={() => setOpenMenuId(openMenuId === p.pipedrive_id ? null : p.pipedrive_id)}
+                              className="p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors text-base leading-none"
+                              title="Acciones"
+                            >
+                              ···
+                            </button>
+                            {openMenuId === p.pipedrive_id && (
+                              <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-20 min-w-[190px] py-1">
+                                <button
+                                  onClick={() => { setOpenMenuId(null); handleSyncClick(p); }}
+                                  disabled={!canSync(p)}
+                                  className={`w-full text-left px-3 py-2 text-xs transition-colors ${
+                                    canSync(p)
+                                      ? "text-orange-600 hover:bg-orange-50"
+                                      : "text-gray-300 cursor-not-allowed"
+                                  }`}
+                                >
+                                  → Enviar a Pipedrive
+                                </button>
+                                {!p.is_historical && (
+                                  <button
+                                    onClick={() => handleMarkHistorical(p.pipedrive_id)}
+                                    className="w-full text-left px-3 py-2 text-xs text-gray-600 hover:bg-gray-50 transition-colors"
+                                  >
+                                    🏷️ Marcar como histórico
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         );
                       })()}
                     </td>
