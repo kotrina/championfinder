@@ -88,14 +88,16 @@ export default async function ContactsPage({
   const { data: roleRows } = await (supabase as any)
     .from("people")
     .select("rol")
-    .not("rol", "is", null) as { data: { rol: string }[] | null };
+    .not("rol", "is", null)
+    .limit(50000) as { data: { rol: string }[] | null };
   const roles = [...new Set((roleRows ?? []).map((r) => r.rol).filter(Boolean))].sort() as string[];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: statusRows } = await (supabase as any)
     .from("people")
     .select("marketing_status")
-    .not("marketing_status", "is", null) as { data: { marketing_status: string }[] | null };
+    .not("marketing_status", "is", null)
+    .limit(50000) as { data: { marketing_status: string }[] | null };
   const statuses = [...new Set((statusRows ?? []).map((s) => s.marketing_status).filter(Boolean))].sort() as string[];
 
   function buildPageUrl(p: number) {
