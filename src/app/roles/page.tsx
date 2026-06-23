@@ -16,7 +16,8 @@ export default async function RolesPage() {
   const { data: rows } = await (supabase as any)
     .from("people")
     .select("rol")
-    .not("rol", "is", null) as { data: { rol: string }[] | null };
+    .not("rol", "is", null)
+    .limit(50000) as { data: { rol: string }[] | null };
 
   // Agrupar en JS
   const countMap = new Map<string, number>();
