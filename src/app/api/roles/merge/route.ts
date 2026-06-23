@@ -25,7 +25,8 @@ export async function POST(req: Request) {
   const { data: affected } = await (adminClient as any)
     .from("people")
     .select("pipedrive_id")
-    .in("rol", roles) as { data: { pipedrive_id: number }[] | null };
+    .in("rol", roles)
+    .limit(50000) as { data: { pipedrive_id: number }[] | null };
 
   if (!affected || affected.length === 0) {
     return NextResponse.json({ ok: true, updated: 0 });
