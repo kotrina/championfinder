@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createServerClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getUserRole } from "@/lib/get-user-role";
 import { AppHeader } from "@/components/AppHeader";
 import { RolesMerger } from "./RolesMerger";
@@ -11,9 +12,10 @@ export default async function RolesPage() {
 
   const role = await getUserRole();
 
-  // Cargar todos los roles con conteo
+  // Cargar todos los roles con conteo (adminClient para consistencia con merge)
+  const adminClient = createAdminClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: rows } = await (supabase as any)
+  const { data: rows } = await (adminClient as any)
     .from("people")
     .select("rol")
     .not("rol", "is", null)
